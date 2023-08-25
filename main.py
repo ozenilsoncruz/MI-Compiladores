@@ -15,23 +15,29 @@ def delimitadorOuOperador(lexema):
 
 
 def analisa_lexema(lexema):
-    # verifica se começa com " para se encaixar em cadeia de caracteres
-    if re.match(r'^"', lexema) is not None:
-        if re.match(estrutura_lexica.get("cadeia_caracteres"), lexema) is not None:
-            # token = f"{num_linha} {codigos.get('cac')}"
-            print("Cadeia de caracteres")
-        else:
-            print("Erro na cadeia de caracteres")
-    elif re.match(r"^[0-9]", lexema) is not None:
-        if re.match(estrutura_lexica.get("numero"), lexema) is not None:
-            print("Numero")
-        else:
-            print("Erro no numero")
-    elif re.match(r"^[a-zA-Z]", lexema) is not None:
-        if re.match(estrutura_lexica.get("identificador"), lexema) is not None:
-            print("Identificador")
-        else:
-            print(f"Erro no identificador ")
+    token = {}
+        
+    if re.match(r'^/*', lexema) is not None:
+        token[lexema] = codigos.get('coment')[re.match(estrutura_lexica.get("comentario"), lexema) is not None]
+    elif re.match(r'^[0-9]', lexema) is not None:
+        token[lexema] = codigos.get('num')[re.match(estrutura_lexica.get("numero"), lexema) is not None]
+    elif re.match(r'^[a-zA-Z]', lexema) is not None:
+        token[lexema] = codigos.get('ident')[re.match(estrutura_lexica.get("identificador"), lexema) is not None]
+    elif re.match(r'^"', lexema) is not None:
+        token[lexema] = codigos.get('str')[re.match(estrutura_lexica.get("cadeia_caracteres"), lexema) is not None]
+    elif lexema == '//':
+        token[lexema] = 'comentario'
+    elif lexema in palavras_reservadas:
+        token[lexema] = 'palavra reservada'
+    elif delimitadorOuOperador(lexema):
+        for key in ["delimitadores", "operadores_relacionais", "operadores_aritmeticos", "operadores_logicos"]:
+            if lexema in estrutura_lexica.get(key):
+                token[lexema] = key
+                break
+    else:
+        token[lexema] = 'token mal formado'
+              
+    return token
 
 
 def analisa_comentario_bloco(linhas: list[str]):
