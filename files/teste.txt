@@ -9,5 +9,10 @@ if ( f >= 10.3.4) && (f < )
 	print("menÇagem");
 // exemplo de teste do lexico
 
+/* ozenilson  
+*/
+
+int a = 0;
+
 /* exa869 mi processadores de
 		linguagem de programacao

@@ -34,33 +34,64 @@ def analisa_lexema(lexema):
             print(f"Erro no identificador ")
 
 
-def analisador_lexico(linha, num_linha: int, tokens_saida: list):
+def analisa_comentario_bloco(linhas: list[str]):
+    comentario = ""
+    bloco_iniciado = False
+    for linha in linhas:
+        if bloco_iniciado:
+            if "*/" in linha:
+                comentario += linha[:-2]
+                bloco_iniciado = False
+                analisa_lexema(comentario)
+                comentario = ""
+            else:
+                comentario += linha
+        elif "/*" in linha:
+            if "\*" in linha:
+                comentario = linha[2:-2]
+                analisa_lexema(comentario)
+                comentario = ""
+            else:
+                bloco_iniciado = True
+                comentario += linha[2:]
+    if bloco_iniciado:
+        analisa_lexema(comentario)
+
+
+def analisador_lexico(linha, num_linha: int) -> list:
+    tokens = []
     index = 0  # Manter o controle da posição atual na linha
     cadeia_caracteres = False  # Indica se esta sendo analisado uma cadeia de caracteres
-    comentario_bloco = False
     while index < len(linha):
         letra = linha[index]
-        if letra == '"' and not cadeia_caracteres:
+        possivel_combinacao = letra + linha[index + 1]
+        if possivel_combinacao == "//":
+            tokens.append(analisa_lexema(possivel_combinacao))
+            break
+        elif possivel_combinacao == "/*":
+            if "\*" in linha:
+                pass
+        elif letra == '"' and not cadeia_caracteres:
             cadeia_caracteres = True
         elif letra == '"' and cadeia_caracteres:
-            analisa_lexema(lexema)
+            tokens.append(analisa_lexema(lexema))
             lexema = ""
             cadeia_caracteres = False
         elif letra == " " and not cadeia_caracteres:
-            analisa_lexema(lexema)
+            tokens.append(analisa_lexema(lexema))
             lexema = ""
         elif delimitadorOuOperador(letra) and not cadeia_caracteres:
-            possivel_combinacao = letra + linha[index + 1]
             if delimitadorOuOperador(possivel_combinacao):
-                analisa_lexema(possivel_combinacao)
+                tokens.append(analisa_lexema(possivel_combinacao))
                 index += 2  # Avança para a próxima da próxima letra
             else:
-                analisa_lexema(lexema)
-                analisa_lexema(letra)
+                tokens.append(analisa_lexema(lexema))
+                tokens.append(analisa_lexema(letra))
                 index += 1
             lexema = ""
         else:
             lexema += letra
+    return tokens
 
 
 # Salva as palavras lidas em um dicionário do tipo {número da linha: [palavras, da, linha]}
@@ -83,11 +114,14 @@ def main():
     pasta = "./files"
     arquivos = os.listdir(pasta)
     tokens_saida = []
+
     for arquivo in arquivos:
         palavras_entrada = ler_arquivo(pasta, arquivo)
-        for num_linha, palavras in palavras_entrada.items():
-            print(palavras, num_linha)
-            # analisador_lexico(palavras, num_linha, tokens_saida)
+        # print(list(palavras_entrada.values()))
+        analisa_comentario_bloco(palavras_entrada.values())
+        # for num_linha, palavras in palavras_entrada.items():
+        #     print(palavras, num_linha)
+        # analisador_lexico(palavras, num_linha, tokens_saida)
 
 
 if __name__ == "__main__":
