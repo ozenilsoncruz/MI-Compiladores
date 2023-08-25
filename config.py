@@ -33,7 +33,7 @@ estrutura_lexica = {
 }
 
 
-#  Código identificadores dos tokens
+#  Código identificadores dos tokens e dos erros.
 """ 
 PRE palavra reservada
 IDE identificador
