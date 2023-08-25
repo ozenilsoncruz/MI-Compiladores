@@ -26,6 +26,7 @@ estrutura_lexica = {
     "identificador": r"^[a-zA-Z][a-zA-Z0-9_]*$",
     "numero": r"^[0-9]+(\.[0-9]+)?$",
     "cadeia_caracteres": r'^".*"?$',
+    "comentario": r'^/\*.*?\*/$',
     "delimitadores": [";", ",", ".", "(", ")", "[", "]", "{", "}", "->"],
     "operadores_relacionais": ["!=", "==", "<", "<=", ">", ">=", "="],
     "operadores_aritmeticos": ["+", "-", "*", "/", "++", "--"],
@@ -33,34 +34,12 @@ estrutura_lexica = {
 }
 
 
-#  Código identificadores dos tokens e dos erros.
-""" 
-PRE palavra reservada
-IDE identificador
-CAC cadeia de caracteres
-NRO numero
-DEL delimitador 
-REL operador relacional
-LOG operador logico
-ART operador aritmético
-CMF cadeia mal formada
-CoMF comentário mal formado
-NMF numero mal formado
-IMF identificador mal formado
-TMF	token mal formado
-"""
+#  Código identificadores dos tokens e dos erros. 
 codigos = {
-    "PRE",
-    "IDE",
-    "CAC",
-    "NRO",
-    "DEL",
-    "REL",
-    "LOG",
-    "ART",
-    "CMF",
-    "COMF",
-    "NMF",
-    "IMF",
-    "TMF",
+    'pr': "palavra reservada",
+    'tmf': "token mal formado",
+    'num': ("numero mal formado", "numero"),
+    'coment': ("comentario mal formado", "comentario"),
+    'str': ("cadeia mal formada", "cadeia de caracteres"),
+    'ident': ("identificador mal formado", "identificador")
 }
