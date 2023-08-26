@@ -114,7 +114,9 @@ def analisador_lexico(linha, num_linha: int) -> list:
                 tokens.append(analisa_lexema(lexema, num_linha))
             lexema = ""
         elif delimitadorOuOperador(letra) and not cadeia_caracteres:
-            if delimitadorOuOperador(possivel_combinacao):
+            if delimitadorOuOperador(
+                possivel_combinacao and len(possivel_combinacao) == 2
+            ):
                 if possivel_combinacao:
                     tokens.append(analisa_lexema(possivel_combinacao, num_linha))
                 lexema = ""
