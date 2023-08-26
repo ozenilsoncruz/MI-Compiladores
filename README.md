@@ -1,9 +1,9 @@
 # Analisador Lexico
 
-<details>
+<!-- <details>
 <summary>Texto do Problema</summary>
-
 ---
+-->
 
 ## Tema
 
@@ -26,7 +26,7 @@ Criar um analisador lexico seguindo os seguintes requisitos:
 - Os arquivos de saída deverão apresentar a lista de tokens, proveniente da análise léxica, além dos erros léxicos, caso existam. Se não houver erros, uma mensagem de sucesso deve ser gravada no arquivo de saída.
 
 ---
-</details>
+<!-- </details> --->
 
 ## Autores
 
