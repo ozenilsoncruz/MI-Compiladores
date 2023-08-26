@@ -148,7 +148,8 @@ def ler_arquivo(pasta, arquivo):
     if os.path.isfile(os.path.join(pasta, arquivo)):
         with open(os.path.join(pasta, arquivo), "r") as a:
             # Divida o aquivo em linhas.
-            linhas = [linha.strip() for linha in a.readlines()]
+            linhas = a.read().split('\n')
+            #linhas = [linha.strip() for linha in a.readlines()]
 
             # Divisão do conteúdo em palavras, considerando espaços e tabulações como separadores.
             for num_linha, linha in enumerate(linhas):

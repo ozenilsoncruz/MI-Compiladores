@@ -2,7 +2,7 @@ exemplo tes#te;
 
 real f = 3.0;int a=0;
 @
-texto msg = "teste sdfsdf
+texto msg = "teste sdfsdf"
 
 if ( f >= 10.3.4) && (f < ) 
 	print("mensagem);
