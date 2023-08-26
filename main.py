@@ -2,7 +2,7 @@ import re, os
 from config import palavras_reservadas, estrutura_lexica, codigos
 
 
-def delimitadorOuOperador(lexema):
+def delimitadorOuOperador(lexema: str) -> bool:
     return any(
         lexema in estrutura_lexica.get(key)
         for key in [
@@ -14,7 +14,7 @@ def delimitadorOuOperador(lexema):
     )
 
 
-def analisa_lexema(lexema, num_linha):
+def analisa_lexema(lexema: str, num_linha: int) -> dict[str, list]:
     token = {}
 
     token["num_linha"] = num_linha
@@ -22,21 +22,21 @@ def analisa_lexema(lexema, num_linha):
 
     if re.match(r"^/\*", lexema) is not None:
         token["tipo"] = codigos.get("coment")[
-            re.match(estrutura_lexica.get("comentario"), lexema) is not None
+            re.match(estrutura_lexica.get("comentario"), lexema, re.DOTALL) is not None
         ]
     elif lexema in palavras_reservadas:
         token["tipo"] = "KEY"
     elif re.match(r"^[0-9]", lexema) is not None:
         token["tipo"] = codigos.get("num")[
-            re.match(estrutura_lexica.get("numero"), lexema) is not None
+            re.match(estrutura_lexica.get("numero"), lexema, re.DOTALL) is not None
         ]
     elif re.match(r"^[a-zA-Z]", lexema) is not None:
         token["tipo"] = codigos.get("ident")[
-            re.match(estrutura_lexica.get("identificador"), lexema) is not None
+            re.match(estrutura_lexica.get("identificador"), lexema, re.DOTALL) is not None
         ]
     elif re.match(r'^"', lexema) is not None:
         token["tipo"] = codigos.get("str")[
-            re.match(estrutura_lexica.get("cadeia_caracteres"), lexema) is not None
+            re.match(estrutura_lexica.get("cadeia_caracteres"), lexema, re.DOTALL) is not None
         ]
     elif delimitadorOuOperador(lexema):
         for key in [
@@ -54,54 +54,43 @@ def analisa_lexema(lexema, num_linha):
     return token
 
 
-def analisa_comentario_bloco(linhas: list[str]) -> list:
-    comentario = ""
-    bloco_iniciado = False
-    tokens = []
-    num_linha = len(linhas)
-    for linha in linhas:
-        if bloco_iniciado:
-            if "*/" in linha:
-                bloco_iniciado = False
-                comentario = ""
+def mescla_comentario_bloco(palavras_entrada: dict[int, list]) -> dict[int, list]:
+    novo_palavras_entrada = {}
+    bloco_iniciado = None
+
+    for num_linha, linha in palavras_entrada.items():
+        sub_string = "".join(re.findall(r'"([^"]*)"', linha)) # busca e junta todas as strings da linha
+        
+        # se estiver na linha e nao estiver dentro de uma string
+        if '/*' in linha and '/*' not in sub_string:
+            if "*/" not in linha:
+                bloco_iniciado = num_linha
+                novo_palavras_entrada[num_linha] = linha
             else:
-                comentario += linha
-        elif "/*" in linha:
-            if "\*" not in linha:
-                bloco_iniciado = True
-                comentario += linha
-    if bloco_iniciado:  # Fim do arquivo e comentário iniciado
-        tokens.append(analisa_lexema(comentario, num_linha))
+                novo_palavras_entrada[num_linha] = linha
+        elif '*/' in linha:
+            if bloco_iniciado is not None:
+                novo_palavras_entrada[bloco_iniciado] += '\n' + linha
+                bloco_iniciado = None
+        elif bloco_iniciado is not None:
+            novo_palavras_entrada[bloco_iniciado] += '\n' + linha
+        else:
+            novo_palavras_entrada[num_linha] = linha
 
-    return tokens
-
-
-# TODO: Ordenar pelo número da linha
-# TODO: Ignorar os comentários de bloco dentro do analisador_lexico
+    return novo_palavras_entrada
 
 
-# TODO: Adicionar o número da linha nos tokens  OK
-# TODO: Ajustar a verificação de palavras reservadas. OK
-# TODO: Remover os arrays vazios e nones dos tokens.   OK
-# TODO: Adicionar a verificação de número e o delimitador '.'  OK
-# TODO: Remover os /t   OK
-
-
-def analisador_lexico(linha, num_linha: int) -> list:
+def analisador_lexico(linha: str, num_linha: int) -> list:
     tokens = []
     index = 0  # Manter o controle da posição atual na linha
     cadeia_caracteres = False  # Indica se esta sendo analisado uma cadeia de caracteres
+    comentario_bloco = False # Indica se esta sendo analisado um comentario de bloco
     lexema = ""
     while index < len(linha):
         letra = linha[index]
-        possivel_combinacao = ""
-        if index + 1 < len(linha):
-            possivel_combinacao = letra + linha[index + 1]
-        else:
-            possivel_combinacao = letra
-        if possivel_combinacao == "//":
-            break
-        elif letra == '"' and not cadeia_caracteres:
+        possivel_combinacao = letra + linha[index + 1] if index + 1 < len(linha) else letra
+                        
+        if letra == '"' and not cadeia_caracteres and not comentario_bloco:
             cadeia_caracteres = True
             lexema += letra
         elif letra == '"' and cadeia_caracteres:
@@ -110,11 +99,25 @@ def analisador_lexico(linha, num_linha: int) -> list:
                 tokens.append(analisa_lexema(lexema, num_linha))
             lexema = ""
             cadeia_caracteres = False
-        elif letra == " " and not cadeia_caracteres:
+        elif possivel_combinacao == "/*" and not cadeia_caracteres and not comentario_bloco:
+            comentario_bloco = True
+            lexema += possivel_combinacao
+            index += 1
+        elif possivel_combinacao == '*/' and comentario_bloco:
+            if lexema:
+                lexema += possivel_combinacao
+                token = analisa_lexema(lexema, num_linha)
+                if token.get('tipo'): # se o token for analisado, adiciono token
+                    tokens.append(token)
+            lexema = ""
+            comentario_bloco = False
+        elif possivel_combinacao == "//" and not cadeia_caracteres and not comentario_bloco:
+            break 
+        elif letra == " " and not cadeia_caracteres and not comentario_bloco:
             if lexema:
                 tokens.append(analisa_lexema(lexema, num_linha))
             lexema = ""
-        elif delimitadorOuOperador(letra) and not cadeia_caracteres:
+        elif delimitadorOuOperador(letra) and not cadeia_caracteres and not comentario_bloco:
             if delimitadorOuOperador(possivel_combinacao):
                 if possivel_combinacao:
                     tokens.append(analisa_lexema(possivel_combinacao, num_linha))
@@ -140,8 +143,11 @@ def analisador_lexico(linha, num_linha: int) -> list:
     return tokens
 
 
-# Salva as palavras lidas em um dicionário do tipo {número da linha: [palavras, da, linha]}
-def ler_arquivo(pasta, arquivo):
+def ler_arquivo(pasta: str, arquivo: str) -> dict[int, list]:
+    '''
+    Salva as palavras lidas em um dicionário 
+        returns {número da linha: ['palavras', 'da', 'linha']}
+    '''
     palavras_entrada = {}
     # Verifique se é realmente um arquivo
 
@@ -149,8 +155,7 @@ def ler_arquivo(pasta, arquivo):
         with open(os.path.join(pasta, arquivo), "r") as a:
             # Divida o aquivo em linhas.
             linhas = a.read().split('\n')
-            #linhas = [linha.strip() for linha in a.readlines()]
-
+            
             # Divisão do conteúdo em palavras, considerando espaços e tabulações como separadores.
             for num_linha, linha in enumerate(linhas):
                 if linha.strip():  # Verifica se a linha não é vazia
@@ -159,23 +164,31 @@ def ler_arquivo(pasta, arquivo):
     return palavras_entrada
 
 
+def salvar_arquivo(pasta: str, arquivo: str, conteudo: str) -> bool:
+    with open(os.path.join(pasta, arquivo), "w") as a:
+        a.write(conteudo)
+
+
 def main():
     pasta = "./files"
     arquivos = os.listdir(pasta)
-    tokens_saida = []
 
     for arquivo in arquivos:
-        palavras_entrada = ler_arquivo(pasta, arquivo)
-        tokens_comentario = analisa_comentario_bloco(palavras_entrada.values())
-        if tokens_comentario:
-            tokens_saida.extend(tokens_comentario)
-        for num_linha, palavras in palavras_entrada.items():
-            tokens = analisador_lexico(palavras, num_linha)
-            if tokens:
-                tokens_saida.extend(analisador_lexico(palavras, num_linha))
-
-    for token in tokens_saida:
-        print(f"{token['num_linha']:02d} {token['tipo']} {token['valor']}\n")
+        tokens_saida = []
+        if 'saida' not in arquivo:
+            palavras_entrada = ler_arquivo(pasta, arquivo)
+            palavras_entrada = mescla_comentario_bloco(palavras_entrada)
+            for num_linha, palavras in palavras_entrada.items():
+                tokens = analisador_lexico(palavras, num_linha)
+                if tokens:
+                    tokens_saida.extend(analisador_lexico(palavras, num_linha))
+            saida = ''
+            for token in tokens_saida:
+                saida += f"{token['num_linha']:02d} {token['tipo']} {token['valor']}\n"
+            salvar_arquivo(pasta, 
+                        arquivo.split('.')[0]+'-saida.txt', 
+                        saida)
+            print('Arquivo de saída salvo!')
 
 
 if __name__ == "__main__":

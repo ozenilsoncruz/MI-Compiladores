@@ -1,0 +1,42 @@
+01 IDE exemplo
+01 DEL ;
+03 KEY real
+03 IDE f
+03 REL =
+03 NUM 3.0
+03 DEL ;
+03 KEY int
+03 IDE a
+03 REL =
+03 DEL ;
+04 TMF @
+05 IDE texto
+05 IDE msg
+05 REL =
+05 STR "teste sdfsdf"
+07 KEY if
+07 DEL (
+07 IDE f
+07 REL >=
+07 NMF 10.3.4
+07 DEL )
+07 LOG &&
+07 DEL (
+07 IDE f
+07 REL <
+07 DEL )
+08 TMF 	print
+08 DEL (
+08 SMF "mensagem);
+09 TMF 	print
+09 DEL (
+09 SMF "menÇagem"
+09 DEL )
+09 DEL ;
+12 ART /
+15 KEY int
+15 IDE a
+15 REL =
+15 DEL ;
+17 CMF /* exa869 mi processadores de
+		linguagem de programacao

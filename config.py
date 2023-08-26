@@ -37,7 +37,7 @@ estrutura_lexica = {
 #  Códigos dos erros/tokens.
 codigos = {
     "num": ("NMF", "NUM"),
-    "coment": ("CMF", "COM"),
+    "coment": ("CMF", ""),
     "str": ("SMF", "STR"),
     "ident": ("IMF", "IDE"),
     "delimitadores": ("", "DEL"),
