@@ -13,7 +13,6 @@ def delimitadorOuOperador(lexema: str) -> bool:
         ]
     )
 
-
 def analisa_lexema(lexema: str, num_linha: int) -> dict[str, list]:
     token = {}
 
@@ -53,7 +52,6 @@ def analisa_lexema(lexema: str, num_linha: int) -> dict[str, list]:
 
     return token
 
-
 def mescla_comentario_bloco(palavras_entrada: dict[int, list]) -> dict[int, list]:
     novo_palavras_entrada = {}
     bloco_iniciado = None
@@ -78,7 +76,6 @@ def mescla_comentario_bloco(palavras_entrada: dict[int, list]) -> dict[int, list
             novo_palavras_entrada[num_linha] = linha
 
     return novo_palavras_entrada
-
 
 def analisador_lexico(linha: str, num_linha: int) -> list:
     tokens = []
@@ -142,7 +139,6 @@ def analisador_lexico(linha: str, num_linha: int) -> list:
         tokens.append(analisa_lexema(lexema, num_linha))
     return tokens
 
-
 def ler_arquivo(pasta: str, arquivo: str) -> dict[int, list]:
     '''
     Salva as palavras lidas em um dicionário 
@@ -163,11 +159,9 @@ def ler_arquivo(pasta: str, arquivo: str) -> dict[int, list]:
                     palavras_entrada[num_linha] = linha
     return palavras_entrada
 
-
 def salvar_arquivo(pasta: str, arquivo: str, conteudo: str) -> bool:
     with open(os.path.join(pasta, arquivo), "w") as a:
         a.write(conteudo)
-
 
 def main():
     pasta = "./files"
