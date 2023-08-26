@@ -36,10 +36,10 @@ estrutura_lexica = {
 
 #  Códigos dos erros/tokens.
 codigos = {
-    "num": ("Número mal formado", "NUM"),
-    "coment": ("Comentário mal formado", "COM"),
-    "str": ("Cadeia de caracteres mal formada", "STR"),
-    "ident": ("Identificador mal formado", "IDE"),
+    "num": ("NMF", "NUM"),
+    "coment": ("CMF", "COM"),
+    "str": ("SMF", "STR"),
+    "ident": ("IMF", "IDE"),
     "delimitadores": ("", "DEL"),
     "operadores_relacionais": ("", "REL"),
     "operadores_aritmeticos": ("", "ART"),

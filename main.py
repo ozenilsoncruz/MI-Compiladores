@@ -106,6 +106,7 @@ def analisador_lexico(linha, num_linha: int) -> list:
             lexema += letra
         elif letra == '"' and cadeia_caracteres:
             if lexema:
+                lexema += letra
                 tokens.append(analisa_lexema(lexema, num_linha))
             lexema = ""
             cadeia_caracteres = False
@@ -114,9 +115,7 @@ def analisador_lexico(linha, num_linha: int) -> list:
                 tokens.append(analisa_lexema(lexema, num_linha))
             lexema = ""
         elif delimitadorOuOperador(letra) and not cadeia_caracteres:
-            if delimitadorOuOperador(
-                possivel_combinacao and len(possivel_combinacao) == 2
-            ):
+            if delimitadorOuOperador(possivel_combinacao):
                 if possivel_combinacao:
                     tokens.append(analisa_lexema(possivel_combinacao, num_linha))
                 lexema = ""
@@ -173,6 +172,7 @@ def main():
             tokens = analisador_lexico(palavras, num_linha)
             if tokens:
                 tokens_saida.extend(analisador_lexico(palavras, num_linha))
+
     for token in tokens_saida:
         print(f"{token['num_linha']:02d} {token['tipo']} {token['valor']}\n")
 
