@@ -106,6 +106,7 @@ def analisador_lexico(linha: str, num_linha: int) -> list:
                 token = analisa_lexema(lexema, num_linha)
                 if token.get('tipo'): # se o token for analisado, adiciono token
                     tokens.append(token)
+            index += 1
             lexema = ""
             comentario_bloco = False
         elif possivel_combinacao == "//" and not cadeia_caracteres and not comentario_bloco:
@@ -115,23 +116,20 @@ def analisador_lexico(linha: str, num_linha: int) -> list:
                 tokens.append(analisa_lexema(lexema, num_linha))
             lexema = ""
         elif delimitadorOuOperador(letra) and not cadeia_caracteres and not comentario_bloco:
-            if delimitadorOuOperador(possivel_combinacao):
-                if possivel_combinacao:
-                    tokens.append(analisa_lexema(possivel_combinacao, num_linha))
-                lexema = ""
-                index += 2  # Avança para a próxima da próxima letra
-                continue
+            if (
+                re.match(estrutura_lexica.get("numero"), lexema) is not None
+                and letra == "."
+            ):  # 3.
+                lexema += letra
             else:
-                if (
-                    re.match(estrutura_lexica.get("numero"), lexema) is not None
-                    and letra == "."
-                ):  # 3.
-                    lexema += letra
-                else:
-                    if lexema:
-                        tokens.append(analisa_lexema(lexema, num_linha))
-                    tokens.append(analisa_lexema(letra, num_linha))
+                if lexema:
+                    tokens.append(analisa_lexema(lexema, num_linha))
                     lexema = ""
+                if delimitadorOuOperador(possivel_combinacao):
+                    tokens.append(analisa_lexema(possivel_combinacao, num_linha))
+                    index += 1  # Avança para a próxima da próxima letra
+                else:
+                    tokens.append(analisa_lexema(letra, num_linha))
         else:
             lexema += letra
         index += 1
@@ -150,7 +148,7 @@ def ler_arquivo(pasta: str, arquivo: str) -> dict[int, list]:
     if os.path.isfile(os.path.join(pasta, arquivo)):
         with open(os.path.join(pasta, arquivo), "r") as a:
             # Divida o aquivo em linhas.
-            linhas = a.read().split('\n')
+            linhas = a.read().replace('\t', '').replace('\r', '').split('\n')
             
             # Divisão do conteúdo em palavras, considerando espaços e tabulações como separadores.
             for num_linha, linha in enumerate(linhas):
@@ -160,8 +158,12 @@ def ler_arquivo(pasta: str, arquivo: str) -> dict[int, list]:
     return palavras_entrada
 
 def salvar_arquivo(pasta: str, arquivo: str, conteudo: str) -> bool:
-    with open(os.path.join(pasta, arquivo), "w") as a:
-        a.write(conteudo)
+    try:
+        with open(os.path.join(pasta, arquivo), "w") as a:
+            a.write(conteudo)
+        print('Arquivo de saída salvo!')
+    except:
+        print('Um erro ocorreu ao salvar o arquivo!')
 
 def main():
     pasta = "./files"
@@ -170,19 +172,17 @@ def main():
     for arquivo in arquivos:
         tokens_saida = []
         if 'saida' not in arquivo:
-            palavras_entrada = ler_arquivo(pasta, arquivo)
-            palavras_entrada = mescla_comentario_bloco(palavras_entrada)
+            palavras_entrada = mescla_comentario_bloco(ler_arquivo(pasta, arquivo))
             for num_linha, palavras in palavras_entrada.items():
                 tokens = analisador_lexico(palavras, num_linha)
                 if tokens:
-                    tokens_saida.extend(analisador_lexico(palavras, num_linha))
+                    tokens_saida.extend(tokens)
             saida = ''
             for token in tokens_saida:
                 saida += f"{token['num_linha']:02d} {token['tipo']} {token['valor']}\n"
             salvar_arquivo(pasta, 
                         arquivo.split('.')[0]+'-saida.txt', 
                         saida)
-            print('Arquivo de saída salvo!')
 
 
 if __name__ == "__main__":
