@@ -25,7 +25,7 @@ palavras_reservadas = {
 estrutura_lexica = {
     "identificador": r"^[a-zA-Z][a-zA-Z0-9_]*$",
     "numero": r"^[0-9]+(\.[0-9]+)?$",
-    "cadeia_caracteres": r'^".*"?$',
+    "cadeia_caracteres": r'^"[\x20-\x21\x23-\x7E]*"$',
     "comentario": r"^/\*.*?\*/$",
     "delimitadores": [";", ",", ".", "(", ")", "[", "]", "{", "}", "->"],
     "operadores_relacionais": ["!=", "==", "<", "<=", ">", ">=", "="],
