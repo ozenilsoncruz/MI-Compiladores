@@ -1,5 +1,4 @@
 01 IDE exemplo
-01 IMF tes#te
 01 DEL ;
 03 KEY real
 03 IDE f
@@ -16,7 +15,6 @@
 08 DEL (
 08 IDE f
 08 REL >=
-08 NMF 10.3.4
 08 DEL )
 08 LOG &&
 08 DEL (
@@ -25,10 +23,8 @@
 08 DEL )
 09 KEY print
 09 DEL (
-09 SMF "mensagem);
 10 KEY print
 10 DEL (
-10 SMF "menÇagem"
 10 DEL )
 10 DEL ;
 13 STR "/* ozenilson  /* "
@@ -39,11 +35,18 @@
 14 ART *
 14 ART /
 14 NUM 12345
-14 SMF "
 16 KEY int
 16 IDE a
 16 REL =
 16 NUM 0
 16 DEL ;
+
+
+
+01 IMF tes#te
+08 NMF 10.3.4
+09 SMF "mensagem);
+10 SMF "menÇagem"
+14 SMF "
 18 CMF /* exa869 mi processadores de
 linguagem de programacao

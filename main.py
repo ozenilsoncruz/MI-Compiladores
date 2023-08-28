@@ -179,12 +179,17 @@ def main():
                 tokens = analisador_lexico(palavras, num_linha)
                 if tokens:
                     tokens_saida.extend(tokens)
-            saida = ''
+            saida_corretos = ''
+            saida_erros = ''
             for token in tokens_saida:
-                saida += f"{token['num_linha']:02d} {token['tipo']} {token['valor']}\n"
+                if any(token.get('tipo') == v for v, _ in codigos.values()):
+                    saida_erros += f"{token['num_linha']:02d} {token['tipo']} {token['valor']}\n"
+                else:
+                    saida_corretos += f"{token['num_linha']:02d} {token['tipo']} {token['valor']}\n"
+            saida_corretos += '\n\n\n' + saida_erros
             salvar_arquivo(pasta, 
                         arquivo.split('.')[0]+'-saida.txt', 
-                        saida)
+                        saida_corretos)
 
 
 if __name__ == "__main__":
