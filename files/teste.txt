@@ -11,7 +11,7 @@ if ( f >= 10.3.4) && (f < )
 // exemplo de teste do lexico
 
 "/* ozenilson  /* " */
-00000000000000 jjk */12345"
+00000000000000 jjk */12345 "
 
 int a = 0;
 

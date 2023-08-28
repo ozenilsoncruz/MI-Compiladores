@@ -60,7 +60,6 @@ def mescla_comentario_bloco(palavras_entrada: dict[int, list[str]]) -> dict[int,
         sub_string = "".join(re.findall(r'"([^"]*)"', linha)) # busca e junta todas as strings da linha
         sub_string2 = "".join(re.findall(r'^"([^"]*)', linha))
         
-        print(sub_string2)
         # se estiver na linha e nao estiver dentro de uma string
         if '/*' in linha and '/*' not in sub_string and '/*' not in sub_string2:
             if "*/" not in linha:
