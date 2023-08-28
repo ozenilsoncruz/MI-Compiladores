@@ -10,8 +10,8 @@ if ( f >= 10.3.4) && (f < )
 	print("menÇagem");
 // exemplo de teste do lexico
 
-/* ozenilson  
-*/
+"/* ozenilson  /* " */
+00000000000000 jjk */12345"
 
 int a = 0;
 

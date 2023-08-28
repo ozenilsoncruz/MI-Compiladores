@@ -31,6 +31,14 @@
 10 SMF "menÇagem"
 10 DEL )
 10 DEL ;
+13 STR "/* ozenilson  /* "
+13 ART *
+13 ART /
+14 NUM 00000000000000
+14 IDE jjk
+14 ART *
+14 ART /
+14 NMF 12345"
 16 KEY int
 16 IDE a
 16 REL =

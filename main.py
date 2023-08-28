@@ -52,24 +52,27 @@ def analisa_lexema(lexema: str, num_linha: int) -> dict[str, list]:
 
     return token
 
-def mescla_comentario_bloco(palavras_entrada: dict[int, list]) -> dict[int, list]:
+def mescla_comentario_bloco(palavras_entrada: dict[int, list[str]]) -> dict[int, list]:
     novo_palavras_entrada = {}
     bloco_iniciado = None
 
     for num_linha, linha in palavras_entrada.items():
         sub_string = "".join(re.findall(r'"([^"]*)"', linha)) # busca e junta todas as strings da linha
+        sub_string2 = "".join(re.findall(r'^"([^"]*)', linha))
         
+        print(sub_string2)
         # se estiver na linha e nao estiver dentro de uma string
-        if '/*' in linha and '/*' not in sub_string:
+        if '/*' in linha and '/*' not in sub_string and '/*' not in sub_string2:
             if "*/" not in linha:
                 bloco_iniciado = num_linha
                 novo_palavras_entrada[num_linha] = linha
             else:
                 novo_palavras_entrada[num_linha] = linha
-        elif '*/' in linha:
-            if bloco_iniciado is not None:
-                novo_palavras_entrada[bloco_iniciado] += '\n' + linha
-                bloco_iniciado = None
+        elif '*/' in linha and bloco_iniciado is not None:
+            index = linha.find('*/')
+            novo_palavras_entrada[bloco_iniciado] += '\n' + linha[:index+2]
+            novo_palavras_entrada[num_linha] = linha[index+2:]
+            bloco_iniciado = None
         elif bloco_iniciado is not None:
             novo_palavras_entrada[bloco_iniciado] += '\n' + linha
         else:
