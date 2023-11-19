@@ -1,0 +1,155 @@
+"Name"     = 'GOAT'
+"Author"   = 'Enter your name'
+"Version"  = 'The version of the grammar and/or language'
+"About"    = 'A short description of the grammar'
+
+"Start Symbol" = <Program>
+
+! -------------------------------------------------
+! Character Sets
+! -------------------------------------------------
+
+{String Chars} = {Printable} + {HT} - ["\]
+{Digit9} = {Digit} - [0] ! Digit já vem no GOLD
+
+
+! -------------------------------------------------
+! Terminals
+! -------------------------------------------------
+
+NUM = ('0'|{Digit9}{Digit}*)('.'{Digit}+)?
+BOOL = 'true' | 'false'
+IDE    = {Letter}({Letter}|{Digit}|'_')*
+STR = '"' ( {String Chars} | '\' {Printable} )* '"'
+TYPE = ('int' | 'string' | 'boolean' | 'real') | ('int' | 'string' | 'boolean' | 'real') ('[' {Digit}+ ']')*
+
+
+     
+! -------------------------------------------------
+! Rules
+! -------------------------------------------------
+
+! The grammar starts below
+<Value> ::= NUM | STR | BOOL
+<Object-Value> ::= | '.' IDE
+<Possible-Value> ::= | IDE <Object-Value> | <Value>
+<Array-Value> ::= <Possible-Value> | <Array>
+<More-Array-Value> ::= | ',' <Array-Value> <More-Array-Value>
+<Array> ::= '[' <Array-Value> <More-Array-Value> ']'
+                    
+<Assignment-Value> ::= IDE <Object-Value> | <Value> | <Array>                 
+<Args-List> ::= <Assignment-Value> <Assignment-Value-List> |
+<Assignment-Value-List> ::= ',' <Args-List> |
+                         
+
+<Parameter> ::= IDE <Parameter-Value-List> |
+<Parameter-Value-List> ::= ',' <Parameter> |
+                        
+
+! --------------------- Definições de Classes e Métodos ---------------------
+<Main-Class> ::= 'class' 'main' '{' <Main-Class-Content> '}'
+<Main-Class-Content> ::= <Variable-Block> <Object-Block> <Statement-Sequence>
+
+<Class-Block> ::= 'class' IDE <Class-Extends> '{' <Class-Content> '}' <Class-Block> |
+<Class-Extends> ::= 'extends' IDE |
+                                
+<Class-Content> ::= <Variable-Block> <Constructor>  <Methods> 
+
+<Methods> ::= 'methods' '{' <Method> '}' |
+<Method> ::= TYPE IDE '(' <Parameter> ')' '{' <Statement-Sequence> 'return' <Value> ';' '}' <Method> 
+          |  'void' IDE '(' <Parameter> ')' '{' <Statement-Sequence> '}' <Method> 
+          |
+
+<Constructor> ::= 'constructor' '(' <Parameter> ')' '{' <Assignment-Method> '}' |       
+<Assignment-Method> ::= 'this.' IDE <Optional-Value> ';' <Assignment-Method> |
+<Optional-Value> ::= '=' <Assignment-Value> |                  
+
+
+! --------------------- Definições de Variáveis e Constantes ---------------------
+<Variable-Block> ::= | 'variables' '{' <Variable> '}'
+<Variable> ::= | TYPE IDE <Optional-Value> <Variable-Same-Line> ';' <Variable> 
+<Variable-Same-Line> ::= | ',' IDE <Optional-Value> <Variable-Same-Line>
+
+<Constant-Block> ::= | 'const' '{' <Constant> '}'
+<Constant> ::= | TYPE IDE '=' <Assignment-Value>  <Constant-Same-Line> ';' <Constant> 
+<Constant-Same-Line> ::= | ',' IDE '=' <Assignment-Value> <Constant-Same-Line>
+                    
+
+
+! --------------------- Definições de Objetos ---------------------
+<Object-Block> ::= | 'objects' '{' <Object> '}'
+<Object> ::= | IDE IDE '=' IDE '->' 'constructor' '(' <Args-List> ')' <Object-Same-Line> ';' <Object>
+<Object-Same-Line> ::= | ',' IDE '=' IDE '->' 'constructor' '(' <Args-List> ')'
+
+<Method-Call> ::= IDE '(' <Args-List> ')'
+
+<Primary-Expression> ::= IDE | NUM | BOOL | STR | <Method-Call>
+
+<Access-Expression> ::= <Primary-Expression> | <Access-Expression-List>
+<Access-Expression-List> ::= '->' <Primary-Expression> | '.' <Primary-Expression> | '[' <Primary-Expression> ']' |
+
+<Unary-Expression> ::= <Access-Expression> <Unary-Expression-List>
+<Unary-Expression-List> ::=  '++' | '--' |
+
+<Multiplicative-Expression> ::= <Unary-Expression> <Multiplicative-Expression-List> 
+<Multiplicative-Expression-List> ::= '*' <Unary-Expression> | '/' <Unary-Expression> |
+
+<Additive-Expression> ::= <Multiplicative-Expression> | <Additive-Expression-List> 
+<Additive-Expression-List> ::= '+' <Multiplicative-Expression> | '-' <Multiplicative-Expression>
+
+<Relational-Expression> ::= <Additive-Expression> <Relational-Expression-List> 
+
+<Relational-Expression-List> ::= | '<' <Additive-Expression> | '>' <Additive-Expression>
+                                 | '<=' <Additive-Expression> | '>=' <Additive-Expression> |
+
+<Equality-Expression> ::= <Relational-Expression> <Equality-Expression-List> 
+<Equality-Expression-List> ::= '!=' <Relational-Expression> | '==' <Relational-Expression> |
+
+<Logical-Not-Expression> ::= <Equality-Expression> | '!' <Logical-Not-Expression>
+
+<Logical-Or-Expression> ::= <Logical-Not-Expression>
+                        | <Logical-Or-Expression> '||' <Logical-Not-Expression>
+                        | '(' <Logical-Or-Expression> ')'
+
+<Logical-And-Expression> ::= <Logical-Or-Expression>
+                          | <Logical-And-Expression> '&&' <Logical-Or-Expression>
+                          | '(' <Logical-And-Expression> ')'
+
+<IDE-List> ::= IDE <IDE-Lis-List>
+<IDE-Lis-List>  ::= ',' <IDE-List> |
+
+<Declaration-Expression> ::= TYPE <IDE-List>
+
+<Assignment-Expression> ::= TYPE IDE '=' <Logical-And-Expression> | IDE '=' <Logical-And-Expression>
+
+<Expression> ::= <Declaration-Expression> | <Assignment-Expression>
+              
+<Expression-Sequence> ::= <Expression> ';' | <Expression> ';' <Expression-Sequence> 
+                       
+!<Expression-Sequence> ::= <Expression>  <Expression-Sequence> ';' |
+
+<Condition> ::= '(' <Logical-And-Expression> ')'
+             
+<If-Statement> ::= 'if' <Condition> 'then' '{' <Statement-Sequence> '}' <Else-Statement>
+<Else-Statement> ::= 'else' '{' <Statement-Sequence> '}' |
+
+<For-Statement> ::= 'for' '(' <Variable> <Logical-And-Expression>';' <Unary-Expression> ')' '{' <Statement-Sequence> '}'
+
+<Print-Command> ::= 'print' '(' <Possible-Value> ')' ';' 
+
+<Read-Command> ::= 'read' '(' IDE <Object-Value> ')' ';'
+                  
+<Statement> ::= <If-Statement> | <For-Statement> | 'pass'
+             
+<Command> ::= <Print-Command> | <Read-Command>
+!<Statement-Sequence> ::= <Statement> <Statement-Sequence> | <Expression-Sequence> <Statement-Sequence> |
+
+<Statement-Sequence> ::= <Statement> <Statement-Sequence>
+                      | <Command> <Statement-Sequence>
+                      | <Expression-Sequence> <Statement-Sequence>
+                      |
+                      
+<Statement-Sequence-List> ::= '{' <Statement> '}' |    
+
+! ------------------------------- Definicao do programa principal -------------------------------
+<Program> ::= <Constant-Block> <Variable-Block> <Class-Block> <Object-Block> <Main-Class>

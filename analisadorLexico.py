@@ -167,30 +167,13 @@ def salvar_arquivo(pasta: str, arquivo: str, conteudo: str) -> bool:
     except:
         print('Um erro ocorreu ao salvar o arquivo!')
 
-def main():
-    pasta = "./files"
-    arquivos = os.listdir(pasta)
+def lexico(pasta: str, arquivo: str) -> list:
+    tokens_saida = []
+    if 'saida' not in arquivo:
+        palavras_entrada = mescla_comentario_bloco(ler_arquivo(pasta, arquivo))
+        for num_linha, palavras in palavras_entrada.items():
+            tokens = analisador_lexico(palavras, num_linha)
+            if tokens:
+                tokens_saida.extend(tokens)
 
-    for arquivo in arquivos:
-        tokens_saida = []
-        if 'saida' not in arquivo:
-            palavras_entrada = mescla_comentario_bloco(ler_arquivo(pasta, arquivo))
-            for num_linha, palavras in palavras_entrada.items():
-                tokens = analisador_lexico(palavras, num_linha)
-                if tokens:
-                    tokens_saida.extend(tokens)
-            saida_corretos = ''
-            saida_erros = ''
-            for token in tokens_saida:
-                if any(token.get('tipo') == v for v, _ in codigos.values()):
-                    saida_erros += f"{token['num_linha']:02d} {token['tipo']} {token['valor']}\n"
-                else:
-                    saida_corretos += f"{token['num_linha']:02d} {token['tipo']} {token['valor']}\n"
-            saida_corretos += '\n\n\n' + saida_erros
-            salvar_arquivo(pasta, 
-                        arquivo.split('.')[0]+'-saida.txt', 
-                        saida_corretos)
-
-
-if __name__ == "__main__":
-    main()
+    return tokens_saida
