@@ -1,19 +1,7 @@
-exemplo tes#te;
-
-real f = 3.0;int a=0;
-@
-
-/*texto msg = "teste sdfsdf"*/
-
-if ( f >= 10.3.4) && (f < ) 
-	print("mensagem);
-	print("menÇagem");
-// exemplo de teste do lexico
-
-"/* ozenilson  /* " */
-00000000000000 jjk */12345 "
-
-int a = 0;
-
-/* exa869 mi processadores de
-		linguagem de programacao
+variables{
+    int , a = 100
+	int a, c, d
+	int a
+	int a;
+	int b, 
+}

@@ -31,10 +31,22 @@ def current_token_type() -> str:
     return current_token()["tipo"]
 
 
+def if_else_check(funcoes: list, expect: str):
+    try:
+        if current_token_value() == expect:
+            for funcao in funcoes:
+                funcao()
+        else:
+            raise SyntaxError(f"Expected {expect}")
+    except SyntaxError as e:
+        save_error(e)
+
+
 # Função de recuperação que sincroniza o analisador até encontrar um delimitador
 def synchronize():
-    delimiters = [";", ",", ".", "(", ")", "[", "]", "{", "}", "->"]
-    while tokens and current_token_value() not in delimiters:
+    delimiters = [";", "{", "}"]
+    while current_token_value() not in delimiters:
+        print(current_token_value())
         next_token()
 
 
@@ -44,6 +56,7 @@ def save_error(e: SyntaxError):
         f"{e.msg}, received {current_token_value()} in line {current_token_line()}"
     )
     errors.append(message)
+    synchronize()
 
 
 # Verifica se um token pertence ao TYPE
@@ -59,20 +72,19 @@ def check_type():
 
 # Verifica se um token é do tipo IDE
 def check_identifier():
-    type = current_token_type()
-    return type == "IDE"
+    return current_token_type() == "IDE"
 
 
 # ------------------------------------------------------------------
 # Função para análise sintática da regra <Value>
 def value():
-    if current_token() in ["NUM", "STR", "BOOL"]:
-        next_token()
+    return current_token_type() in ["NUM", "STR"] or current_token_value in ["true", "false"]
+        
 
 
 # Função para análise sintática da regra <Object-Value>
 def object_value():
-    if current_token() == ".":
+    if current_token_value() == ".":
         next_token()
         ide = current_token()
         next_token()
@@ -80,7 +92,7 @@ def object_value():
 
 # Função para análise sintática da regra <Possible-Value>
 def possible_value():
-    if current_token() == "IDE":
+    if current_token_value() == "IDE":
         next_token()
         object_value()
     else:
@@ -95,7 +107,7 @@ def array_value():
 
 # Função para análise sintática da regra <More-Array-Value>
 def more_array_value():
-    if current_token() == ",":
+    if current_token_value() == ",":
         next_token()
         array_value()
         more_array_value()
@@ -103,11 +115,11 @@ def more_array_value():
 
 # Função para análise sintática da regra <Array>
 def array():
-    if current_token() == "[":
+    if current_token_value() == "[":
         next_token()
         array_value()
         more_array_value()
-        if current_token() == "]":
+        if current_token_value() == "]":
             next_token()
 
 
@@ -116,8 +128,10 @@ def assignment_value():
     if check_identifier():
         next_token()
         object_value()
-    else:
-        value()
+    elif value():
+        next_token()
+    # elif array():
+    #     pass  
     # A função já trata o <Array>
 
 
@@ -129,20 +143,20 @@ def args_list():
 
 # Função para análise sintática da regra <Assignment-Value-List>
 def assignment_value_list():
-    if current_token() == ",":
+    if current_token_value() == ",":
         next_token()
         args_list()
 
 
 # Função para análise sintática da regra <Optional-Value>
 def optional_value():
-    if current_token() == "=":
+    if current_token_value() == "=":
         next_token()
         assignment_value()
 
 
 # Função para análise sintática da regra <Variable-Block>
-def variable_block():
+def variable_block():    
     try:
         if current_token_value() == "variables":
             next_token()
@@ -182,7 +196,7 @@ def variable():
 # Função para análise sintática da regra <Variable-Same-Line>
 # Da pra usar um loop while
 def variable_same_line():
-    if current_token() == ",":
+    if current_token_value() == ",":
         next_token()
         if check_identifier():
             next_token()
@@ -192,12 +206,12 @@ def variable_same_line():
 
 # Função para análise sintática da regra <Constant-Block>
 def constant_block():
-    if current_token() == "const":
+    if current_token_value() == "const":
         next_token()
-        if current_token() == "{":
+        if current_token_value() == "{":
             next_token()
             constant()
-            if current_token() == "}":
+            if current_token_value() == "}":
                 next_token()
 
 
@@ -209,24 +223,24 @@ def constant():
     ide = current_token()
     next_token()
 
-    if current_token() == "=":
+    if current_token_value() == "=":
         next_token()
         assignment_value()
 
     constant_same_line()
 
-    if current_token() == ";":
+    if current_token_value() == ";":
         next_token()
         constant()
 
 
 # Função para análise sintática da regra <Constant-Same-Line>
 def constant_same_line():
-    if current_token() == ",":
+    if current_token_value() == ",":
         next_token()
         ide = current_token()
         next_token()
-        if current_token() == "=":
+        if current_token_value() == "=":
             next_token()
             assignment_value()
         constant_same_line()
@@ -242,10 +256,12 @@ def main():
         index = 0
         # Chame a função correspondente à regra inicial aqui
         # Por exemplo, para a regra <Variable-Block>:
-        # variable_block()
-        print(current_token())
-        next_token()
-        print(current_token())
+        variable_block()
+        
+        print(errors)
+        # print(current_token())
+        # next_token()
+        # print(current_token())
 
 
 main()
