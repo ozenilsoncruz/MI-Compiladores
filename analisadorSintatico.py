@@ -1,4 +1,5 @@
 from analisadorLexico import lexico, salvar_arquivo
+from config import palavras_reservadas
 import os
 import re
 
@@ -6,6 +7,8 @@ import re
 tokens = []
 index = 0
 errors = []
+
+key_words = list(palavras_reservadas)
 
 
 # Função auxiliar para avançar para o próximo token
@@ -16,8 +19,11 @@ def next_token():
 
 # Função auxiliar para obter o token atual
 def current_token():
-    return tokens[index] if index < len(tokens) else None
-
+    token = {}
+    token["valor"] = ''
+    token["num_linha"] = ''
+    token["tipo"] = ''
+    return tokens[index] if index < len(tokens) else token
 
 def current_token_value() -> str:
     return current_token()["valor"]
@@ -43,20 +49,19 @@ def if_else_check(funcoes: list, expect: str):
 
 
 # Função de recuperação que sincroniza o analisador até encontrar um delimitador
-def synchronize():
-    delimiters = [";", "{", "}"]
-    while current_token_value() not in delimiters:
+def synchronize(delimiters: list):
+    while current_token_value() not in delimiters and current_token_value() != ''  :
         print(current_token_value())
         next_token()
 
 
 # Salva o erro passado na lista de erros
-def save_error(e: SyntaxError):
+def save_error(e: SyntaxError, delimiters: list):
     message = (
         f"{e.msg}, received {current_token_value()} in line {current_token_line()}"
     )
     errors.append(message)
-    synchronize()
+    synchronize(delimiters)
 
 
 # Verifica se um token pertence ao TYPE
@@ -156,7 +161,8 @@ def optional_value():
 
 
 # Função para análise sintática da regra <Variable-Block>
-def variable_block():    
+def variable_block(): 
+    delimiters = ['{', '}', ';']   
     try:
         if current_token_value() == "variables":
             next_token()
@@ -167,14 +173,16 @@ def variable_block():
                     next_token()
                 else:
                     raise SyntaxError("Expected '}'")
+
             else:
                 raise SyntaxError("Expected '{'")
     except SyntaxError as e:
-        save_error(e)
+        save_error(e, delimiters)
 
 
 # Função para análise sintática da regra <Variable>
 def variable():
+    delimiters = ['{', '}', ';'] + key_words    
     try:
         if check_type():
             next_token()
@@ -190,18 +198,28 @@ def variable():
             else:
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
-        save_error(e)
+        save_error(e, delimiters)
+        variable()
+    
 
 
 # Função para análise sintática da regra <Variable-Same-Line>
 # Da pra usar um loop while
 def variable_same_line():
-    if current_token_value() == ",":
-        next_token()
-        if check_identifier():
+    delimiters = ['{', '}', ';'] + key_words    
+    try:
+        if current_token_value() == ",":
             next_token()
-            optional_value()
-            variable_same_line()
+            if check_identifier():
+                next_token()
+                optional_value()
+                variable_same_line()
+            else:
+                raise SyntaxError("Expected a valid identifier")
+    except(SyntaxError) as e:
+        save_error(e, delimiters)
+        
+        
 
 
 # Função para análise sintática da regra <Constant-Block>

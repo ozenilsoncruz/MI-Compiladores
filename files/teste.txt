@@ -1,6 +1,6 @@
 variables{
-    int , a = 100
-	int a, c, d
+    int a = 100
+	int a, c, d;
 	int a
 	int a;
 	int b, 
