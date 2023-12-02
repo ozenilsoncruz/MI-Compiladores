@@ -9,9 +9,11 @@ index = 0
 errors = []
 
 key_words = list(palavras_reservadas)
+delimiters = ["{", "}", ";"]
+delimiters_with_keywords = delimiters + key_words
 
 
-# Função auxiliar para avançar para o próximo token
+# Função auxiliar para avançar o índice da lista de tokens
 def next_token():
     global index
     index += 1
@@ -19,11 +21,10 @@ def next_token():
 
 # Função auxiliar para obter o token atual
 def current_token():
-    token = {}
-    token["valor"] = ''
-    token["num_linha"] = ''
-    token["tipo"] = ''
-    return tokens[index] if index < len(tokens) else token
+    return (
+        tokens[index] if index < len(tokens) else dict(valor="", num_linha="", tipo="")
+    )
+
 
 def current_token_value() -> str:
     return current_token()["valor"]
@@ -37,42 +38,20 @@ def current_token_type() -> str:
     return current_token()["tipo"]
 
 
-def if_else_check(funcoes: list, expect: str):
-    try:
-        if current_token_value() == expect:
-            for funcao in funcoes:
-                funcao()
-        else:
-            raise SyntaxError(f"Expected {expect}")
-    except SyntaxError as e:
-        save_error(e)
-
-
-# Função de recuperação que sincroniza o analisador até encontrar um delimitador
-def synchronize(delimiters: list):
-    while current_token_value() not in delimiters and current_token_value() != ''  :
+# Função de recuperação que sincroniza o analisador até encontrar um ponto de recuperação
+def synchronize(recovery_point=delimiters):
+    while current_token_value() not in recovery_point and current_token_value() != "":
         print(current_token_value())
         next_token()
 
 
 # Salva o erro passado na lista de erros
-def save_error(e: SyntaxError, delimiters: list):
+def save_error(e: SyntaxError, recovery_point=delimiters):
     message = (
         f"{e.msg}, received {current_token_value()} in line {current_token_line()}"
     )
     errors.append(message)
-    synchronize(delimiters)
-
-
-# Verifica se um token pertence ao TYPE
-def check_type():
-    value = current_token_value()
-    simple_type_pattern = re.compile(r"^(int|string|real|boolean)$")
-
-    # Padrão para tipos de vetor (int[], string[], real[], boolean[])
-    vector_type_pattern = re.compile(r"^(int|string|real|boolean)\[\d*\]$")
-
-    return bool(simple_type_pattern.match(value) or vector_type_pattern.match(value))
+    synchronize(recovery_point)
 
 
 # Verifica se um token é do tipo IDE
@@ -83,31 +62,79 @@ def check_identifier():
 # ------------------------------------------------------------------
 # Função para análise sintática da regra <Value>
 def value():
-    return current_token_type() in ["NUM", "STR"] or current_token_value in ["true", "false"]
-        
+    return current_token_type() in ["NUM", "STR"] or current_token_value in [
+        "true",
+        "false",
+    ]
 
 
 # Função para análise sintática da regra <Object-Value>
 def object_value():
-    if current_token_value() == ".":
+    try:
+        if current_token_value() == ".":
+            next_token()
+            if check_identifier():
+                next_token()
+            else:
+                raise SyntaxError("Expected a valid identifier")
+    except SyntaxError as e:
+        save_error(e, delimiters_with_keywords)
+
+
+# Verifica se o que está dento dos colchetes é um valor válido
+def array_possible_value():
+    try:
+        if check_identifier():
+            next_token()
+            object_value()
+        elif current_token_type() == "NUM":
+            next_token()
+        else:
+            raise SyntaxError("Expected ']'")
+    except SyntaxError as e:
+        save_error(e, delimiters_with_keywords)
+
+
+# Verifica se a produção é um tipo array.
+def check_array_type():
+    try:
+        if current_token_value() == "[":
+            next_token()
+            array_possible_value()
+            if current_token_value() == "]":
+                next_token()
+                check_array_type()
+            else:
+                raise SyntaxError("Expected ']'")
+    except SyntaxError as e:
+        save_error(e, delimiters_with_keywords)
+        check_array_type()
+
+
+# Verifica se um token pertence ao TYPE
+def check_type():
+    if current_token_value() in ["int", "string", "real", "boolean"]:
         next_token()
-        ide = current_token()
-        next_token()
+        check_array_type()
+        return True
+    return False
 
 
 # Função para análise sintática da regra <Possible-Value>
 def possible_value():
-    if current_token_value() == "IDE":
+    if check_identifier():
         next_token()
         object_value()
-    else:
-        value()
+    elif value():
+        next_token()
 
 
 # Função para análise sintática da regra <Array-Value>
 def array_value():
-    possible_value()
-    array()
+    if current_token_value() == "[":
+        array()
+    else:
+        possible_value()
 
 
 # Função para análise sintática da regra <More-Array-Value>
@@ -120,12 +147,17 @@ def more_array_value():
 
 # Função para análise sintática da regra <Array>
 def array():
-    if current_token_value() == "[":
-        next_token()
-        array_value()
-        more_array_value()
-        if current_token_value() == "]":
+    try:
+        if current_token_value() == "[":
             next_token()
+            array_value()
+            more_array_value()
+            if current_token_value() == "]":
+                next_token()
+            else:
+                raise SyntaxError("Expected ']'")
+    except SyntaxError as e:
+        save_error(e, delimiters_with_keywords)
 
 
 # Função para análise sintática da regra <Assignment-Value>
@@ -135,9 +167,8 @@ def assignment_value():
         object_value()
     elif value():
         next_token()
-    # elif array():
-    #     pass  
-    # A função já trata o <Array>
+    elif array():
+        pass
 
 
 # Função para análise sintática da regra <Args-List>
@@ -161,8 +192,7 @@ def optional_value():
 
 
 # Função para análise sintática da regra <Variable-Block>
-def variable_block(): 
-    delimiters = ['{', '}', ';']   
+def variable_block():
     try:
         if current_token_value() == "variables":
             next_token()
@@ -177,15 +207,13 @@ def variable_block():
             else:
                 raise SyntaxError("Expected '{'")
     except SyntaxError as e:
-        save_error(e, delimiters)
+        save_error(e)
 
 
 # Função para análise sintática da regra <Variable>
 def variable():
-    delimiters = ['{', '}', ';'] + key_words    
     try:
         if check_type():
-            next_token()
             if check_identifier():
                 next_token()
                 optional_value()
@@ -198,15 +226,13 @@ def variable():
             else:
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
-        save_error(e, delimiters)
+        save_error(e, delimiters_with_keywords)
         variable()
-    
 
 
 # Função para análise sintática da regra <Variable-Same-Line>
 # Da pra usar um loop while
 def variable_same_line():
-    delimiters = ['{', '}', ';'] + key_words    
     try:
         if current_token_value() == ",":
             next_token()
@@ -216,10 +242,8 @@ def variable_same_line():
                 variable_same_line()
             else:
                 raise SyntaxError("Expected a valid identifier")
-    except(SyntaxError) as e:
-        save_error(e, delimiters)
-        
-        
+    except SyntaxError as e:
+        save_error(e, delimiters_with_keywords)
 
 
 # Função para análise sintática da regra <Constant-Block>
@@ -275,7 +299,7 @@ def main():
         # Chame a função correspondente à regra inicial aqui
         # Por exemplo, para a regra <Variable-Block>:
         variable_block()
-        
+
         print(errors)
         # print(current_token())
         # next_token()
