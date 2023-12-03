@@ -1,5 +1,19 @@
+
 variables{
-    int[10] a = teste.valor;
+    int[10] a = teste.valor
 	int a, c, d;
 	int[10][10] a = b[10][10][10];
+	real[10] a, b, c;
+	int b 10;
+	int a = ;
 }
+
+/*
+const {
+	int a = 10;
+	int b 10;
+	real b = 10;
+	int[10] a = a[;
+	int a = 5;
+}
+*/

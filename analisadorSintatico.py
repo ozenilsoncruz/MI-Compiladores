@@ -16,7 +16,8 @@ delimiters_with_keywords = delimiters + key_words
 # Função auxiliar para avançar o índice da lista de tokens
 def next_token():
     global index
-    index += 1
+    if index < len(tokens) - 1:
+        index += 1
 
 
 # Função auxiliar para obter o token atual
@@ -39,16 +40,18 @@ def current_token_type() -> str:
 
 
 # Função de recuperação que sincroniza o analisador até encontrar um ponto de recuperação
-def synchronize(recovery_point=delimiters):
+def synchronize(recovery_point):
     while current_token_value() not in recovery_point and current_token_value() != "":
         print(current_token_value())
+        next_token()
+    if current_token_value() in delimiters:
         next_token()
 
 
 # Salva o erro passado na lista de erros
-def save_error(e: SyntaxError, recovery_point=delimiters):
+def save_error(e: SyntaxError, recovery_point=delimiters_with_keywords):
     message = (
-        f"{e.msg}, received {current_token_value()} in line {current_token_line()}"
+        f"{e.msg}, received '{current_token_value()}' in line {current_token_line()}"
     )
     errors.append(message)
     synchronize(recovery_point)
@@ -78,7 +81,7 @@ def object_value():
             else:
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
-        save_error(e, delimiters_with_keywords)
+        save_error(e)
 
 
 # Verifica se o que está dento dos colchetes é um valor válido
@@ -90,12 +93,12 @@ def array_possible_value():
         elif current_token_type() == "NUM":
             next_token()
         else:
-            raise SyntaxError("Expected ']'")
+            raise SyntaxError("Expected a valid index for array")
     except SyntaxError as e:
-        save_error(e, delimiters_with_keywords)
+        save_error(e)
 
 
-# Verifica se a produção é um tipo array.
+# Verifica se a produção é um tipo array ou um acesso a uma posição de um array/matriz.
 def definition_access_array():
     try:
         if current_token_value() == "[":
@@ -107,7 +110,7 @@ def definition_access_array():
             else:
                 raise SyntaxError("Expected ']'")
     except SyntaxError as e:
-        save_error(e, delimiters_with_keywords)
+        save_error(e)
         definition_access_array()
 
 
@@ -157,19 +160,24 @@ def array():
             else:
                 raise SyntaxError("Expected ']'")
     except SyntaxError as e:
-        save_error(e, delimiters_with_keywords)
+        save_error(e)
 
 
 # Função para análise sintática da regra <Assignment-Value>
 def assignment_value():
-    if check_identifier():
-        next_token()
-        definition_access_array()
-        object_value()
-    elif value():
-        next_token()
-    elif array():
-        pass
+    try:
+        if check_identifier():
+            next_token()
+            definition_access_array()
+            object_value()
+        elif value():
+            next_token()
+        elif current_token_value() == "[":
+            array()
+        else:
+            raise SyntaxError("Expected a valid value")
+    except SyntaxError as e:
+        save_error(e)
 
 
 # Função para análise sintática da regra <Args-List>
@@ -208,7 +216,7 @@ def variable_block():
             else:
                 raise SyntaxError("Expected '{'")
     except SyntaxError as e:
-        save_error(e)
+        save_error(e, delimiters)
 
 
 # Função para análise sintática da regra <Variable>
@@ -227,7 +235,7 @@ def variable():
             else:
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
-        save_error(e, delimiters_with_keywords)
+        save_error(e)
         variable()
 
 
@@ -244,49 +252,68 @@ def variable_same_line():
             else:
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
-        save_error(e, delimiters_with_keywords)
+        save_error(e)
 
 
 # Função para análise sintática da regra <Constant-Block>
 def constant_block():
-    if current_token_value() == "const":
-        next_token()
-        if current_token_value() == "{":
+    try:
+        if current_token_value() == "const":
             next_token()
-            constant()
-            if current_token_value() == "}":
+            if current_token_value() == "{":
                 next_token()
+                constant()
+                if current_token_value() == "}":
+                    next_token()
+                else:
+                    raise SyntaxError("Expected '}")
+            else:
+                raise SyntaxError("Expected '{")
+    except SyntaxError as e:
+        save_error(e, delimiters)
 
 
 # Função para análise sintática da regra <Constant>
 def constant():
-    type_ = current_token()
-    next_token()
-
-    ide = current_token()
-    next_token()
-
-    if current_token_value() == "=":
-        next_token()
-        assignment_value()
-
-    constant_same_line()
-
-    if current_token_value() == ";":
-        next_token()
+    try:
+        if check_type():
+            if check_identifier():
+                next_token()
+                if current_token_value() == "=":
+                    next_token()
+                    assignment_value()
+                    constant_same_line()
+                    if current_token_value() == ";":
+                        next_token()
+                        constant()
+                    else:
+                        raise SyntaxError("Expected ';'")
+                else:
+                    raise SyntaxError("Expected '='")
+            else:
+                raise SyntaxError("Expected a valid identifier")
+    except SyntaxError as e:
+        save_error(e)
         constant()
 
 
 # Função para análise sintática da regra <Constant-Same-Line>
 def constant_same_line():
-    if current_token_value() == ",":
-        next_token()
-        ide = current_token()
-        next_token()
-        if current_token_value() == "=":
+    try:
+        if current_token_value() == ",":
             next_token()
-            assignment_value()
-        constant_same_line()
+            if check_identifier():
+                next_token()
+                if current_token_value() == "=":
+                    next_token()
+                    assignment_value()
+                    constant_same_line()
+                else:
+                    raise SyntaxError("Expected ';'")
+            else:
+                raise SyntaxError("Expected a valid identifier")
+    except SyntaxError as e:
+        save_error(e)
 
 
 def main():
@@ -300,6 +327,7 @@ def main():
         # Chame a função correspondente à regra inicial aqui
         # Por exemplo, para a regra <Variable-Block>:
         variable_block()
+        # constant_block()
 
         print(errors)
         # print(current_token())
