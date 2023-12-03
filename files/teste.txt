@@ -1,7 +1,5 @@
 variables{
-    int[10] a = 100;
+    int[10] a = teste.valor;
 	int a, c, d;
-	int a
-	int a;
-	int b, 
+	int[10][10] a = b[10][10][10];
 }

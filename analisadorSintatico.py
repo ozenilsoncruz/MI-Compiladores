@@ -96,26 +96,26 @@ def array_possible_value():
 
 
 # Verifica se a produção é um tipo array.
-def check_array_type():
+def definition_access_array():
     try:
         if current_token_value() == "[":
             next_token()
             array_possible_value()
             if current_token_value() == "]":
                 next_token()
-                check_array_type()
+                definition_access_array()
             else:
                 raise SyntaxError("Expected ']'")
     except SyntaxError as e:
         save_error(e, delimiters_with_keywords)
-        check_array_type()
+        definition_access_array()
 
 
 # Verifica se um token pertence ao TYPE
 def check_type():
     if current_token_value() in ["int", "string", "real", "boolean"]:
         next_token()
-        check_array_type()
+        definition_access_array()
         return True
     return False
 
@@ -164,6 +164,7 @@ def array():
 def assignment_value():
     if check_identifier():
         next_token()
+        definition_access_array()
         object_value()
     elif value():
         next_token()
