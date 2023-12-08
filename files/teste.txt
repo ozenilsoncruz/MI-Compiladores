@@ -8,7 +8,7 @@ variables{
 	int a = ;
 }
 
-/*
+
 const {
 	int a = 10;
 	int b 10;
@@ -16,4 +16,40 @@ const {
 	int[10] a = a[;
 	int a = 5;
 }
-*/
+
+
+class Carro {
+    variables {
+        int a = 10, b = 11;
+    }
+    
+    constructor (int a, int c){
+        this.a = a;
+        this.b = 10;
+        this.c = c;
+    }
+    
+    methods{
+        void test(){
+            
+        }
+        
+        
+    }
+}
+
+class Corola extends Carro {
+    variables{
+        int a = 10, b = 11;
+    }
+    
+    constructor(int n, int c){
+        this.a = a;
+        this.b = 10;
+        this.c = c;
+    }
+}
+
+objects {
+    Corola corola1 = Carro->constructor(a, b), corola2 = Carro->constructor(c, b);
+}*/

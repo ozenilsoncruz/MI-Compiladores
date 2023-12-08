@@ -3,17 +3,17 @@
 1. a declaração de métodos não prevê o tipo dos parâmetros. Exemplo:
 
 methods{
-int teste2(a){
-return 0;
-}
+    int teste2(a){
+        return 0;
+    }
 }
 
 Deveria ser assim:
 
 methods{
-int teste2(int a){
-return 0;
-}
+    int teste2(int a){
+        return 0;
+    }
 }
 
 No construtor também é necessário o tipo dos parâmetros!
@@ -22,9 +22,9 @@ No construtor também é necessário o tipo dos parâmetros!
 
 2. No construtor é possível não atribuir nada à um atributo. Qual o sentido disso? Exemplo:
 
-   constructor (a) {
-   this.a;
-   }
+    constructor (a) {
+        this.a;
+    }
 
 ---
 
@@ -42,21 +42,21 @@ No construtor também é necessário o tipo dos parâmetros!
 
 4. A variável de controle do for pode NÃO ser inicializada! É possível ter mais de uma variável de controle. Variável de controle pode ser inicializada com valores diferentes de inteiro. Outra coisa, como a linguagem tem um bloco variables para declaração de variáveis, não é necessário colocar o tipo da variável de controle.
 
-   for(int a; i < MAX; i--) {
-   print(i);
-   }
+    for(int a; i < MAX; i--) {
+        print(i);
+    }
 
-   for(int a=10, b=20, c=a; i < MAX; i--) {
-   print(i);
-   }
+    for(int a=10, b=20, c=a; i < MAX; i--) {
+        print(i);
+    }
 
-   for(int a="teste for"; i < MAX; i--) {
-   print(i);
-   }
+    for(int a="teste for"; i < MAX; i--) {
+        print(i);
+    }
 
-   for(int a = [1, 2, 3]; i < MAX; i--) {
-   print(i);
-   }
+    for(int a = [1, 2, 3]; i < MAX; i--) {
+        print(i);
+    }
 
 ---
 

@@ -42,7 +42,6 @@ def current_token_type() -> str:
 # Função de recuperação que sincroniza o analisador até encontrar um ponto de recuperação
 def synchronize(recovery_point):
     while current_token_value() not in recovery_point and current_token_value() != "":
-        print(current_token_value())
         next_token()
     if current_token_value() in delimiters:
         next_token()
@@ -231,7 +230,8 @@ def variable():
                     next_token()
                     variable()
                 else:
-                    raise SyntaxError("Expected ';'")
+                    if current_token_value() != "}":
+                        raise SyntaxError("Expected ';'")
             else:
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
@@ -287,7 +287,8 @@ def constant():
                         next_token()
                         constant()
                     else:
-                        raise SyntaxError("Expected ';'")
+                        if current_token_value() != "}":
+                            raise SyntaxError("Expected ';'")
                 else:
                     raise SyntaxError("Expected '='")
             else:
@@ -316,6 +317,144 @@ def constant_same_line():
         save_error(e)
 
 
+
+# ------------------------------------- TESTE ----------------------------------------------
+def class_block():
+    try:
+        if current_token_value() == "class":
+            next_token()
+            if check_identifier():
+                next_token()
+                class_extends()
+                if current_token_value() == "{":
+                    next_token()
+                    class_content()
+                    if current_token_value() == "}":
+                        next_token()
+                    else:
+                        raise SyntaxError("Expected '}'")
+                else:
+                    raise SyntaxError("Expected '{'")
+            else:
+                raise SyntaxError("Expected a valid class identifier")
+    except SyntaxError as e:
+        save_error(e, delimiters)
+
+
+def class_extends():
+    if current_token_value() == "extends":
+        next_token()
+        if check_identifier():
+            next_token()
+
+
+def class_content():
+    variable_block()
+    constructor()
+    methods()
+
+
+def methods():
+    if current_token_value() == "methods":
+        next_token()
+        if current_token_value() == "{":
+            next_token()
+            method()
+            if current_token_value() == "}":
+                next_token()
+            else:
+                raise SyntaxError("Expected '}'")
+
+
+def method():
+    try:
+        if check_type() or current_token_value() == "void":
+            next_token()
+            if check_identifier():
+                next_token()
+                if current_token_value() == "(":
+                    next_token()
+                    parameter()
+                    if current_token_value() == ")":
+                        next_token()
+                        if current_token_value() == "{":
+                            next_token()
+                            statement_sequence()
+                            if current_token_value() == "return":
+                                next_token()
+                                value()
+                                if current_token_value() == ";":
+                                    next_token()
+                                    if current_token_value() == "}":
+                                        next_token()
+                                        method()
+                                    else:
+                                        raise SyntaxError("Expected '}'")
+                                else:
+                                    raise SyntaxError("Expected ';'")
+                            else:
+                                raise SyntaxError("Expected 'return'")
+                        else:
+                            raise SyntaxError("Expected '{'")
+                    else:
+                        raise SyntaxError("Expected ')'")
+                else:
+                    raise SyntaxError("Expected '('")
+            else:
+                raise SyntaxError("Expected a valid method identifier")
+    except SyntaxError as e:
+        save_error(e)
+        synchronize(delimiters_with_keywords)
+
+
+def constructor():
+    if current_token_value() == "constructor":
+        next_token()
+        if current_token_value() == "(":
+            next_token()
+            parameter()
+            if current_token_value() == ")":
+                next_token()
+                if current_token_value() == "{":
+                    next_token()
+                    assignment_method()
+                    if current_token_value() == "}":
+                        next_token()
+
+
+def assignment_method():
+    if current_token_value() == "this":
+        next_token()
+        if current_token_value() == ".":
+            next_token()
+            if check_identifier():
+                next_token()
+                optional_value()
+                if current_token_value() == ";":
+                    next_token()
+                    assignment_method()
+                # lançar o erro
+
+
+def parameter():
+    if check_type():
+        if check_identifier():
+            next_token()
+            parameter_value_list()
+            # lançar o erro
+
+
+def parameter_value_list():
+    if current_token_value() == ",":
+        next_token()
+        parameter()
+        # lançar o erro
+
+
+def statement_sequence():
+    pass
+# ------------------------------------------------------------------------------------------
+
 def main():
     global tokens, index
     pasta = "./files"
@@ -327,12 +466,12 @@ def main():
         # Chame a função correspondente à regra inicial aqui
         # Por exemplo, para a regra <Variable-Block>:
         variable_block()
-        # constant_block()
+        constant_block()
+        class_block()
 
-        print(errors)
-        # print(current_token())
-        # next_token()
-        # print(current_token())
+        print(*errors, sep='\n')
 
 
-main()
+if __name__ == "__main__":
+    main()
+    
