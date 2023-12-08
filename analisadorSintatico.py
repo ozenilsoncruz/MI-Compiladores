@@ -72,20 +72,17 @@ def value():
 
 # Função para análise sintática da regra <Object-Value>
 def object_value():
-    try:
-        if current_token_value() == ".":
+    if current_token_value() == ".":
+        next_token()
+        if check_identifier():
             next_token()
-            if check_identifier():
-                next_token()
-            else:
-                raise SyntaxError("Expected a valid identifier")
-    except SyntaxError as e:
-        save_error(e)
+        else:
+            raise SyntaxError("Expected a valid identifier")
+    
 
 
 # Verifica se o que está dento dos colchetes é um valor válido
 def array_possible_value():
-    try:
         if check_identifier():
             next_token()
             object_value()
@@ -93,24 +90,21 @@ def array_possible_value():
             next_token()
         else:
             raise SyntaxError("Expected a valid index for array")
-    except SyntaxError as e:
-        save_error(e)
+ 
+        
 
 
 # Verifica se a produção é um tipo array ou um acesso a uma posição de um array/matriz.
 def definition_access_array():
-    try:
-        if current_token_value() == "[":
+    if current_token_value() == "[":
+        next_token()
+        array_possible_value()
+        if current_token_value() == "]":
             next_token()
-            array_possible_value()
-            if current_token_value() == "]":
-                next_token()
-                definition_access_array()
-            else:
-                raise SyntaxError("Expected ']'")
-    except SyntaxError as e:
-        save_error(e)
-        definition_access_array()
+            definition_access_array()
+        else:
+            raise SyntaxError("Expected ']'")
+  
 
 
 # Verifica se um token pertence ao TYPE
@@ -164,19 +158,17 @@ def array():
 
 # Função para análise sintática da regra <Assignment-Value>
 def assignment_value():
-    try:
-        if check_identifier():
-            next_token()
-            definition_access_array()
-            object_value()
-        elif value():
-            next_token()
-        elif current_token_value() == "[":
-            array()
-        else:
-            raise SyntaxError("Expected a valid value")
-    except SyntaxError as e:
-        save_error(e)
+    if check_identifier():
+        next_token()
+        definition_access_array()
+        object_value()
+    elif value():
+        next_token()
+    elif current_token_value() == "[":
+        array()
+    else:
+        raise SyntaxError("Expected a valid value")
+    
 
 
 # Função para análise sintática da regra <Args-List>
@@ -211,7 +203,6 @@ def variable_block():
                     next_token()
                 else:
                     raise SyntaxError("Expected '}'")
-
             else:
                 raise SyntaxError("Expected '{'")
     except SyntaxError as e:
@@ -230,8 +221,7 @@ def variable():
                     next_token()
                     variable()
                 else:
-                    if current_token_value() != "}":
-                        raise SyntaxError("Expected ';'")
+                    raise SyntaxError("Expected ';'")
             else:
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
@@ -282,13 +272,13 @@ def constant():
                 if current_token_value() == "=":
                     next_token()
                     assignment_value()
+                    print(current_token_value())
                     constant_same_line()
                     if current_token_value() == ";":
                         next_token()
                         constant()
                     else:
-                        if current_token_value() != "}":
-                            raise SyntaxError("Expected ';'")
+                        raise SyntaxError("Expected ';'")
                 else:
                     raise SyntaxError("Expected '='")
             else:
