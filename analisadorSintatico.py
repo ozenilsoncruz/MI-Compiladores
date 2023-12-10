@@ -420,6 +420,14 @@ def constructor():
                     assignment_method()
                     if current_token_value() == "}":
                         next_token()
+                    else:
+                        raise SyntaxError("Expected '}'")
+                else:
+                    raise SyntaxError("Expected '{'")
+            else:
+                raise SyntaxError("Expected ')'")
+        else:
+            raise SyntaxError("Expected '('")
 
 
 def assignment_method():
@@ -433,7 +441,12 @@ def assignment_method():
                 if current_token_value() == ";":
                     next_token()
                     assignment_method()
-                # lançar o erro
+                else:
+                    raise SyntaxError("Expected ';'")
+            else:
+                raise SyntaxError("Expected a valid identifier")
+        else:
+            raise SyntaxError("Expected '.'")
 
 
 def parameter():
@@ -441,14 +454,17 @@ def parameter():
         if check_identifier():
             next_token()
             parameter_value_list()
-            # lançar o erro
+        else:
+            raise SyntaxError("Expected a valid identifier")
+    else:
+        if current_token_value() != ")":
+            raise SyntaxError("Expected a valid type")
 
 
 def parameter_value_list():
     if current_token_value() == ",":
         next_token()
         parameter()
-        # lançar o erro
 
 
 def statement_sequence():
