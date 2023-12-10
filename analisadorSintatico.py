@@ -80,20 +80,17 @@ def object_value():
             raise SyntaxError("Expected a valid identifier")
     
 
-
 # Verifica se o que está dento dos colchetes é um valor válido
 def array_possible_value():
-        if check_identifier():
-            next_token()
-            object_value()
-        elif current_token_type() == "NUM":
-            next_token()
-        else:
-            raise SyntaxError("Expected a valid index for array")
+    if check_identifier():
+        next_token()
+        object_value()
+    elif current_token_type() == "NUM":
+        next_token()
+    else:
+        raise SyntaxError("Expected a valid index for array")
  
         
-
-
 # Verifica se a produção é um tipo array ou um acesso a uma posição de um array/matriz.
 def definition_access_array():
     if current_token_value() == "[":
@@ -105,7 +102,6 @@ def definition_access_array():
         else:
             raise SyntaxError("Expected ']'")
   
-
 
 # Verifica se um token pertence ao TYPE
 def check_type():
@@ -143,17 +139,14 @@ def more_array_value():
 
 # Função para análise sintática da regra <Array>
 def array():
-    try:
-        if current_token_value() == "[":
+    if current_token_value() == "[":
+        next_token()
+        array_value()
+        more_array_value()
+        if current_token_value() == "]":
             next_token()
-            array_value()
-            more_array_value()
-            if current_token_value() == "]":
-                next_token()
-            else:
-                raise SyntaxError("Expected ']'")
-    except SyntaxError as e:
-        save_error(e)
+        else:
+            raise SyntaxError("Expected ']'")
 
 
 # Função para análise sintática da regra <Assignment-Value>
@@ -169,7 +162,6 @@ def assignment_value():
     else:
         raise SyntaxError("Expected a valid value")
     
-
 
 # Função para análise sintática da regra <Args-List>
 def args_list():
@@ -193,20 +185,17 @@ def optional_value():
 
 # Função para análise sintática da regra <Variable-Block>
 def variable_block():
-    try:
-        if current_token_value() == "variables":
+    if current_token_value() == "variables":
+        next_token()
+        if current_token_value() == "{":
             next_token()
-            if current_token_value() == "{":
+            variable()
+            if current_token_value() == "}":
                 next_token()
-                variable()
-                if current_token_value() == "}":
-                    next_token()
-                else:
-                    raise SyntaxError("Expected '}'")
             else:
-                raise SyntaxError("Expected '{'")
-    except SyntaxError as e:
-        save_error(e, delimiters)
+                raise SyntaxError("Expected '}'")
+        else:
+            raise SyntaxError("Expected '{'")
 
 
 # Função para análise sintática da regra <Variable>
@@ -243,24 +232,22 @@ def variable_same_line():
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
         save_error(e)
+        #variable_same_line()
 
 
 # Função para análise sintática da regra <Constant-Block>
 def constant_block():
-    try:
-        if current_token_value() == "const":
+    if current_token_value() == "const":
+        next_token()
+        if current_token_value() == "{":
             next_token()
-            if current_token_value() == "{":
+            constant()
+            if current_token_value() == "}":
                 next_token()
-                constant()
-                if current_token_value() == "}":
-                    next_token()
-                else:
-                    raise SyntaxError("Expected '}")
             else:
-                raise SyntaxError("Expected '{")
-    except SyntaxError as e:
-        save_error(e, delimiters)
+                raise SyntaxError("Expected '}")
+        else:
+            raise SyntaxError("Expected '{")
 
 
 # Função para análise sintática da regra <Constant>
@@ -272,7 +259,6 @@ def constant():
                 if current_token_value() == "=":
                     next_token()
                     assignment_value()
-                    print(current_token_value())
                     constant_same_line()
                     if current_token_value() == ";":
                         next_token()
@@ -305,45 +291,52 @@ def constant_same_line():
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
         save_error(e)
+        #constant_same_line()
 
 
-
-# ------------------------------------- TESTE ----------------------------------------------
+# Função para análise sintática da regra <Class-Block>
 def class_block():
     try:
         if current_token_value() == "class":
             next_token()
-            if check_identifier():
-                next_token()
-                class_extends()
-                if current_token_value() == "{":
+            if current_token_value() != "main":
+                if check_identifier():
                     next_token()
-                    class_content()
-                    if current_token_value() == "}":
+                    class_extends()
+                    if current_token_value() == "{":
                         next_token()
+                        class_content()
+                        if current_token_value() == "}":
+                            next_token()
+                        else:
+                            raise SyntaxError("Expected '}'")
                     else:
-                        raise SyntaxError("Expected '}'")
+                        raise SyntaxError("Expected '{'")
                 else:
-                    raise SyntaxError("Expected '{'")
-            else:
-                raise SyntaxError("Expected a valid class identifier")
+                    raise SyntaxError("Expected a valid class identifier")
     except SyntaxError as e:
-        save_error(e, delimiters)
+        save_error(e)
+        class_block() 
 
 
+# Função para análise sintática da regra <Class-Extends>
 def class_extends():
     if current_token_value() == "extends":
         next_token()
         if check_identifier():
             next_token()
+        else:
+            raise SyntaxError("Expected a valid class identifier")
 
 
+# Função para análise sintática da regra <Class-Content>
 def class_content():
     variable_block()
     constructor()
     methods()
 
 
+# Função para análise sintática da regra <Methods>
 def methods():
     if current_token_value() == "methods":
         next_token()
@@ -356,10 +349,13 @@ def methods():
                 raise SyntaxError("Expected '}'")
 
 
+# Função para análise sintática da regra <Method>
 def method():
     try:
-        if check_type() or current_token_value() == "void":
-            next_token()
+        tipo = check_type()
+        if tipo or current_token_value() == "void":
+            if not tipo:
+                next_token()
             if check_identifier():
                 next_token()
                 if current_token_value() == "(":
@@ -370,20 +366,24 @@ def method():
                         if current_token_value() == "{":
                             next_token()
                             statement_sequence()
-                            if current_token_value() == "return":
-                                next_token()
-                                value()
-                                if current_token_value() == ";":
+                            if tipo:
+                                if current_token_value() == "return":
                                     next_token()
-                                    if current_token_value() == "}":
+                                    if value():
                                         next_token()
-                                        method()
+                                        if current_token_value() == ";":
+                                            next_token()
+                                            if current_token_value() == "}":
+                                                next_token()
+                                                method()
+                                            else:
+                                                raise SyntaxError("Expected '}'")
+                                        else:
+                                            raise SyntaxError("Expected ';'")
                                     else:
-                                        raise SyntaxError("Expected '}'")
+                                        raise SyntaxError("Expected a valid value")
                                 else:
-                                    raise SyntaxError("Expected ';'")
-                            else:
-                                raise SyntaxError("Expected 'return'")
+                                    raise SyntaxError("Expected 'return'")
                         else:
                             raise SyntaxError("Expected '{'")
                     else:
@@ -394,9 +394,10 @@ def method():
                 raise SyntaxError("Expected a valid method identifier")
     except SyntaxError as e:
         save_error(e)
-        synchronize(delimiters_with_keywords)
+        method()
 
 
+# Função para análise sintática da regra <Constructor>
 def constructor():
     if current_token_value() == "constructor":
         next_token()
@@ -420,23 +421,149 @@ def constructor():
             raise SyntaxError("Expected '('")
 
 
-def assignment_method():
-    if current_token_value() == "this":
+#----------------------------- Teste -------------------------------------------------------------------------------
+def main_class():
+    if current_token_value() == "class":
         next_token()
-        if current_token_value() == ".":
+        if current_token_value() == "main":
+            next_token()
+            if current_token_value() == "{":
+                next_token()
+                main_class_content()
+                if current_token_value() == "}":
+                    next_token()
+                else:
+                    raise SyntaxError("Expected '}'")
+            else:
+                raise SyntaxError("Expected '{'")
+        else:
+            raise SyntaxError("Expected 'main'")
+
+
+def main_class_content():
+    variable_block()
+    object_block()
+    statement_sequence()
+
+
+def object_block():
+    if current_token_value() == "objects":
+        print('\n\ntesntando\n\n')
+        next_token()
+        if current_token_value() == "{":
+            next_token()
+            object_declaration()
+            if current_token_value() == "}":
+                next_token()
+            else:
+                raise SyntaxError("Expected '}'")
+        else:
+            raise SyntaxError("Expected '{'")
+
+
+def object_declaration():
+    try:
+        if check_identifier():
             next_token()
             if check_identifier():
                 next_token()
-                optional_value()
-                if current_token_value() == ";":
+                if current_token_value() == "=":
                     next_token()
-                    assignment_method()
+                    if check_identifier():
+                        if current_token_value() == "-":
+                            if current_token_value() == ">":
+                                if current_token_value() == "constructor":
+                                    next_token()
+                                    if current_token_value() == "(":
+                                        next_token()
+                                        args_list()
+                                        if current_token_value() == ")":
+                                            next_token()
+                                            object_same_line()
+                                            if current_token_value() == ";":
+                                                next_token()
+                                                object_declaration()
+                                            else:
+                                                raise SyntaxError("Expected ';'")
+                                        else:
+                                            raise SyntaxError("Expected ')'")
+                                    else:
+                                        raise SyntaxError("Expected '('")
+                                else:
+                                    raise SyntaxError("Expected 'constructor'")
+                            else:
+                                raise SyntaxError("Expected '>'")
+                        else:
+                            raise SyntaxError("Expected '-'")
+                    else:
+                        raise SyntaxError("Expected a valid identifier")
                 else:
-                    raise SyntaxError("Expected ';'")
+                    raise SyntaxError("Expected '='")
             else:
                 raise SyntaxError("Expected a valid identifier")
+    except SyntaxError as e:
+        save_error(e)
+        object_declaration() 
+
+
+def object_same_line():
+    if current_token_value() == ",":
+        next_token()
+        if check_identifier():
+            next_token()
+            if current_token_value() == "=":
+                next_token()
+                if check_identifier():
+                    if current_token_value() == "-":
+                        if current_token_value() == ">":
+                            if current_token_value() == "constructor":
+                                next_token()
+                                if current_token_value() == "(":
+                                    next_token()
+                                    args_list()
+                                    if current_token_value() == ")":
+                                        next_token()
+                                        object_same_line()
+                                    else:
+                                        raise SyntaxError("Expected ')'")
+                                else:
+                                    raise SyntaxError("Expected '('")
+                            else:
+                                raise SyntaxError("Expected 'constructor'")
+                        else:
+                            raise SyntaxError("Expected '>'")
+                    else:
+                        raise SyntaxError("Expected '-'")
+                else:
+                    raise SyntaxError("Expected a valid identifier")
+            else:
+                raise SyntaxError("Expected '='")
         else:
-            raise SyntaxError("Expected '.'")
+            raise SyntaxError("Expected a valid identifier")
+#------------------------------------------------------------------------------------------------------------
+
+
+def assignment_method():
+    try:
+        if current_token_value() == "this":
+            next_token()
+            if current_token_value() == ".":
+                next_token()
+                if check_identifier():
+                    next_token()
+                    optional_value()
+                    if current_token_value() == ";":
+                        next_token()
+                        assignment_method()
+                    else:
+                        raise SyntaxError("Expected ';'")
+                else:
+                    raise SyntaxError("Expected a valid identifier")
+            else:
+                raise SyntaxError("Expected '.'")
+    except SyntaxError as e:
+        save_error(e)
+        assignment_method()
 
 
 def parameter():
@@ -459,7 +586,14 @@ def parameter_value_list():
 
 def statement_sequence():
     pass
-# ------------------------------------------------------------------------------------------
+
+
+def program():
+    constant_block()
+    variable_block()
+    class_block()
+    object_block()
+    # main_class()
 
 def main():
     global tokens, index
@@ -471,9 +605,11 @@ def main():
         index = 0
         # Chame a função correspondente à regra inicial aqui
         # Por exemplo, para a regra <Variable-Block>:
-        variable_block()
-        constant_block()
-        class_block()
+        try:
+            program()
+        except SyntaxError as e:
+            save_error(e)
+        
 
         print(*errors, sep='\n')
 

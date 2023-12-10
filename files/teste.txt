@@ -1,3 +1,10 @@
+const {
+	int a = 10;
+	int b 10;
+	real b = 10;
+	int[10] a = a[;
+	int a = 5;
+}
 
 variables{
     int[10] a = teste.valor
@@ -7,16 +14,6 @@ variables{
 	int b 10;
 	int a = ;
 }
-
-
-const {
-	int a = 10;
-	int b 10;
-	real b = 10;
-	int[10] a = a[;
-	int a = 5;
-}
-
 
 class Carro {
     variables {
@@ -30,10 +27,13 @@ class Carro {
     }
     
     methods{
+        int test(){
+            return 0;
+        }
+        
         void test(){
             
         }
-        
         
     }
 }
@@ -52,4 +52,4 @@ class Corola extends Carro {
 
 objects {
     Corola corola1 = Carro->constructor(a, b), corola2 = Carro->constructor(c, b);
-}*/
+}
