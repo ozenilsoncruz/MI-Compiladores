@@ -27,15 +27,20 @@ class Carro {
     }
     
     methods{
-        void test3(){
-            
-        }
-
         int test(){
-            return 0;
+            if(i==5)then{
+                i=4;
+            }else{
+                i=10;
+            }
+            return i;
         }
 
-        int test2(){
+        void test2(){
+            print("testando 123...")
+        }
+
+        int test3(){
             
         }
 
@@ -76,5 +81,20 @@ class main {
         Corola c = Carro->constructor(a, b), c2 = Carro->constructor(c, b);
     }
 
+    print("teste");
 
+    for(i=0; i < MAX; i++){
+        if(i==5)then{
+            i=4;
+        }else{
+            i=10;
+        }
+    }
+
+    for(i="teste for"; i < MAX; i++){
+        
+    }
+
+    print("teste);
+    read(a);
 }

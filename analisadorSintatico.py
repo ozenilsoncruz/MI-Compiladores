@@ -1,5 +1,5 @@
-from analisadorLexico import lexico, salvar_arquivo
-from config import palavras_reservadas
+from analisadorLexico import lexico
+from config import palavras_reservadas, salvar_arquivo
 import os
 import re
 
@@ -398,9 +398,10 @@ def method():
                             statement_sequence()
                             if tipo:
                                 if current_token_value() == "return":
-                                    next_token()
-                                    if value():
                                         next_token()
+                                        assignment_value()
+                                    # if value() or check_identifier():
+                                    #     next_token()
                                         if current_token_value() == ";":
                                             next_token()
                                             if current_token_value() == "}":
@@ -410,8 +411,8 @@ def method():
                                                 raise SyntaxError("Expected '}'")
                                         else:
                                             raise SyntaxError("Expected ';'")
-                                    else:
-                                        raise SyntaxError("Expected a valid value")
+                                    # else:
+                                    #     raise SyntaxError("Expected a valid value")
                                 else:
                                     raise SyntaxError("Expected 'return'")
                             else:
@@ -462,7 +463,7 @@ def constructor():
             raise SyntaxError("Expected '('")
 
 
-# ----------------------------- Teste -------------------------------------------------------------------------------
+# Função para análise sintática da regra <Main-Class>
 def main_class():
     if current_token_value() == "class":
         next_token()
@@ -481,12 +482,14 @@ def main_class():
             raise SyntaxError("Expected 'main'")
 
 
+# Função para análise sintática da regra <Main-Class-Content>
 def main_class_content():
     variable_block()
     object_block()
     statement_sequence()
 
 
+# Função para análise sintática da regra <Main-Class-Content>
 def object_block():
     if current_token_value() == "objects":
         next_token()
@@ -501,6 +504,7 @@ def object_block():
             raise SyntaxError("Expected '{'")
 
 
+# Função para análise sintática da regra <Object-Declaration>
 def object_declaration():
     try:
         if check_identifier():
@@ -545,6 +549,7 @@ def object_declaration():
         object_declaration()
 
 
+# Função para análise sintática da regra <Object-same-line>
 def object_same_line():
     if current_token_value() == ",":
         next_token()
@@ -580,9 +585,7 @@ def object_same_line():
             raise SyntaxError("Expected a valid identifier")
 
 
-# ------------------------------------------------------------------------------------------------------------
-
-
+# Função para análise sintática da regra <Assignment-Method>
 def assignment_method():
     try:
         if current_token_value() == "this":
@@ -610,6 +613,7 @@ def assignment_method():
         assignment_method()
 
 
+# Função para análise sintática da regra <Parameter>
 def parameter():
     if check_type():
         if check_identifier():
@@ -622,6 +626,7 @@ def parameter():
             raise SyntaxError("Expected a valid type")
 
 
+# Função para análise sintática da regra <Parameter-Value-List>
 def parameter_value_list():
     if current_token_value() == ",":
         next_token()
@@ -925,6 +930,7 @@ def read_command():
         save_error(e)
 
 
+# Função para análise sintática da regra <Program>
 def program():
     constant_block()
     variable_block()
@@ -939,14 +945,23 @@ def main():
     arquivos = os.listdir(pasta)
 
     for arquivo in arquivos:
-        tokens = lexico(pasta=pasta, arquivo=arquivo)
-        index = 0
-        try:
-            program()
-        except SyntaxError as e:
-            save_error(e)
+        if 'saida' not in arquivo:
+            tokens = lexico(pasta=pasta, arquivo=arquivo)
+            index = 0
+            try:
+                program()
+            except SyntaxError as e:
+                save_error(e)
 
-        print(*errors, sep="\n")
+            #print(*errors, sep="\n")
+            
+            erros = ""
+            for e in errors:
+                erros += e + '\n'
+            
+            salvar_arquivo(pasta, 
+                        arquivo.split('.')[0]+'-saida.txt', 
+                        erros)
 
 
 if __name__ == "__main__":

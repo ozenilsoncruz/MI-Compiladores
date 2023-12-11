@@ -1,3 +1,6 @@
+import os
+
+
 palavras_reservadas = {
     "variables",
     "const",
@@ -45,3 +48,32 @@ codigos = {
     "operadores_aritmeticos": ("", "ART"),
     "operadores_logicos": ("", "LOG"),
 }
+
+
+def ler_arquivo(pasta: str, arquivo: str) -> dict[int, list]:
+    '''
+    Salva as palavras lidas em um dicionário 
+        returns {número da linha: ['palavras', 'da', 'linha']}
+    '''
+    palavras_entrada = {}
+    # Verifique se é realmente um arquivo
+
+    if os.path.isfile(os.path.join(pasta, arquivo)):
+        with open(os.path.join(pasta, arquivo), "r") as a:
+            # Divida o aquivo em linhas.
+            linhas = a.read().replace('\t', '').replace('\r', '').split('\n')
+            
+            # Divisão do conteúdo em palavras, considerando espaços e tabulações como separadores.
+            for num_linha, linha in enumerate(linhas):
+                if linha.strip():  # Verifica se a linha não é vazia
+                    num_linha += 1
+                    palavras_entrada[num_linha] = linha
+    return palavras_entrada
+
+def salvar_arquivo(pasta: str, arquivo: str, conteudo: str) -> bool:
+    try:
+        with open(os.path.join(pasta, arquivo), "w") as a:
+            a.write(conteudo)
+        print('Arquivo de saída salvo!')
+    except:
+        print('Um erro ocorreu ao salvar o arquivo!')

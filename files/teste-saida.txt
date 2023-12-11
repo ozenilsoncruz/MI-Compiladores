@@ -1,0 +1,18 @@
+Expected '=', received '10' in line 3
+Expected a valid index for array, received ';' in line 5
+Expected ';', received 'int' in line 11
+Expected ';', received '10' in line 14
+Expected a valid value, received ';' in line 15
+Expected '=', received ';' in line 24
+Expected a valid value, received ';' in line 26
+Expected ';', received '}' in line 41
+Expected '}', received 'int' in line 43
+Expected 'return', received '}' in line 45
+Expected '}', received 'return' in line 48
+Expected '->', received '-' in line 68
+Expected ';', received 'c5' in line 69
+Expected ')', received 'b' in line 70
+Expected a valid identifier, received '=' in line 71
+Expected '->', received '(' in line 72
+Expected a valid value in For Loop variable, received '"teste for"' in line 94
+Expected '}', received '<' in line 94
