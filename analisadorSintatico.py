@@ -308,6 +308,7 @@ def class_block():
                         class_content()
                         if current_token_value() == "}":
                             next_token()
+                            class_block() 
                         else:
                             raise SyntaxError("Expected '}'")
                     else:
@@ -315,7 +316,8 @@ def class_block():
                 else:
                     raise SyntaxError("Expected a valid class identifier")
     except SyntaxError as e:
-        save_error(e)
+        sinc = ['objects', 'class'] if 'extends' in str(e) else delimiters_with_keywords
+        save_error(e, sinc)
         class_block() 
 
 
@@ -327,6 +329,10 @@ def class_extends():
             next_token()
         else:
             raise SyntaxError("Expected a valid class identifier")
+    else:
+        if current_token_value() != "{":
+            raise SyntaxError("Expected 'extends'")
+            
 
 
 # Função para análise sintática da regra <Class-Content>
@@ -334,6 +340,7 @@ def class_content():
     variable_block()
     constructor()
     methods()
+    
 
 
 # Função para análise sintática da regra <Methods>
@@ -346,7 +353,8 @@ def methods():
             if current_token_value() == "}":
                 next_token()
             else:
-                raise SyntaxError("Expected '}'")
+                if current_token_value() != "class":
+                    raise SyntaxError("Expected '}'")
 
 
 # Função para análise sintática da regra <Method>
@@ -354,7 +362,7 @@ def method():
     try:
         tipo = check_type()
         if tipo or current_token_value() == "void":
-            if not tipo:
+            if current_token_value() == "void":
                 next_token()
             if check_identifier():
                 next_token()
@@ -384,6 +392,12 @@ def method():
                                         raise SyntaxError("Expected a valid value")
                                 else:
                                     raise SyntaxError("Expected 'return'")
+                            else:
+                                if current_token_value() == "}":
+                                    next_token()
+                                    method()
+                                else:
+                                    raise SyntaxError("Expected '}'")
                         else:
                             raise SyntaxError("Expected '{'")
                     else:
@@ -393,7 +407,8 @@ def method():
             else:
                 raise SyntaxError("Expected a valid method identifier")
     except SyntaxError as e:
-        save_error(e)
+        sinc = ["int", "string", "real", "boolean", "void", "class", "objects", '}'] if '}' in str(e) and current_token_value() == 'return' else delimiters_with_keywords
+        save_error(e, sinc)
         method()
 
 
@@ -448,7 +463,6 @@ def main_class_content():
 
 def object_block():
     if current_token_value() == "objects":
-        print('\n\ntesntando\n\n')
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -470,31 +484,30 @@ def object_declaration():
                 if current_token_value() == "=":
                     next_token()
                     if check_identifier():
-                        if current_token_value() == "-":
-                            if current_token_value() == ">":
-                                if current_token_value() == "constructor":
+                        next_token()
+                        if current_token_value() == "->":
+                            next_token()
+                            if current_token_value() == "constructor":
+                                next_token()
+                                if current_token_value() == "(":
                                     next_token()
-                                    if current_token_value() == "(":
+                                    args_list()
+                                    if current_token_value() == ")":
                                         next_token()
-                                        args_list()
-                                        if current_token_value() == ")":
+                                        object_same_line()
+                                        if current_token_value() == ";":
                                             next_token()
-                                            object_same_line()
-                                            if current_token_value() == ";":
-                                                next_token()
-                                                object_declaration()
-                                            else:
-                                                raise SyntaxError("Expected ';'")
+                                            object_declaration()
                                         else:
-                                            raise SyntaxError("Expected ')'")
+                                            raise SyntaxError("Expected ';'")
                                     else:
-                                        raise SyntaxError("Expected '('")
+                                        raise SyntaxError("Expected ')'")
                                 else:
-                                    raise SyntaxError("Expected 'constructor'")
+                                    raise SyntaxError("Expected '('")
                             else:
-                                raise SyntaxError("Expected '>'")
+                                raise SyntaxError("Expected 'constructor'")
                         else:
-                            raise SyntaxError("Expected '-'")
+                            raise SyntaxError("Expected '->'")
                     else:
                         raise SyntaxError("Expected a valid identifier")
                 else:
@@ -514,26 +527,25 @@ def object_same_line():
             if current_token_value() == "=":
                 next_token()
                 if check_identifier():
-                    if current_token_value() == "-":
-                        if current_token_value() == ">":
-                            if current_token_value() == "constructor":
+                    next_token()
+                    if current_token_value() == "->":
+                        next_token()
+                        if current_token_value() == "constructor":
+                            next_token()
+                            if current_token_value() == "(":
                                 next_token()
-                                if current_token_value() == "(":
+                                args_list()
+                                if current_token_value() == ")":
                                     next_token()
-                                    args_list()
-                                    if current_token_value() == ")":
-                                        next_token()
-                                        object_same_line()
-                                    else:
-                                        raise SyntaxError("Expected ')'")
+                                    object_same_line()
                                 else:
-                                    raise SyntaxError("Expected '('")
+                                    raise SyntaxError("Expected ')'")
                             else:
-                                raise SyntaxError("Expected 'constructor'")
+                                raise SyntaxError("Expected '('")
                         else:
-                            raise SyntaxError("Expected '>'")
+                            raise SyntaxError("Expected 'constructor'")  
                     else:
-                        raise SyntaxError("Expected '-'")
+                        raise SyntaxError("Expected '->'")
                 else:
                     raise SyntaxError("Expected a valid identifier")
             else:
@@ -551,12 +563,16 @@ def assignment_method():
                 next_token()
                 if check_identifier():
                     next_token()
-                    optional_value()
-                    if current_token_value() == ";":
+                    if current_token_value() == "=":
                         next_token()
-                        assignment_method()
+                        assignment_value()
+                        if current_token_value() == ";":
+                            next_token()
+                            assignment_method()
+                        else:
+                            raise SyntaxError("Expected ';'") 
                     else:
-                        raise SyntaxError("Expected ';'")
+                        raise SyntaxError("Expected '='") 
                 else:
                     raise SyntaxError("Expected a valid identifier")
             else:
@@ -593,7 +609,8 @@ def program():
     variable_block()
     class_block()
     object_block()
-    # main_class()
+    main_class()
+
 
 def main():
     global tokens, index
@@ -609,7 +626,6 @@ def main():
             program()
         except SyntaxError as e:
             save_error(e)
-        
 
         print(*errors, sep='\n')
 

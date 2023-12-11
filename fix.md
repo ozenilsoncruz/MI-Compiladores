@@ -1,7 +1,7 @@
 ## Correções necessárias
 
 1. a declaração de métodos não prevê o tipo dos parâmetros. Exemplo:
-
+<!-- Resolvido -->
 methods{
     int teste2(a){
         return 0;
