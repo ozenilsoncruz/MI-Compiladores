@@ -70,6 +70,23 @@ def value():
     ]
 
 
+# Função para análise sintática da regra <Method-Call>
+def method_call():
+    if check_identifier():
+        next_token()
+        if current_token_value() == "(":
+            next_token()
+            args_list()
+            if current_token_value() == ")":
+                next_token()
+            else:
+                raise SyntaxError("Expected ')'")
+        else:
+            raise SyntaxError("Expected '('")
+    else:
+        raise SyntaxError("Expected a valid identifier")
+
+
 # Função para análise sintática da regra <Object-Value>
 def object_value():
     if current_token_value() == ".":
@@ -78,7 +95,10 @@ def object_value():
             next_token()
         else:
             raise SyntaxError("Expected a valid identifier")
-    
+    if current_token_value() == "->":
+        next_token()
+        method_call()
+
 
 # Verifica se o que está dento dos colchetes é um valor válido
 def array_possible_value():
@@ -89,8 +109,8 @@ def array_possible_value():
         next_token()
     else:
         raise SyntaxError("Expected a valid index for array")
- 
-        
+
+
 # Verifica se a produção é um tipo array ou um acesso a uma posição de um array/matriz.
 def definition_access_array():
     if current_token_value() == "[":
@@ -101,7 +121,7 @@ def definition_access_array():
             definition_access_array()
         else:
             raise SyntaxError("Expected ']'")
-  
+
 
 # Verifica se um token pertence ao TYPE
 def check_type():
@@ -161,26 +181,30 @@ def assignment_value():
         array()
     else:
         raise SyntaxError("Expected a valid value")
-    
+
 
 # Função para análise sintática da regra <Args-List>
 def args_list():
-    assignment_value()
-    assignment_value_list()
+    if check_identifier() or value() or current_token_value() == "[":
+        logical_and_expression()
+        assignment_value_list()
 
 
 # Função para análise sintática da regra <Assignment-Value-List>
 def assignment_value_list():
     if current_token_value() == ",":
         next_token()
-        args_list()
+        if check_identifier() or value() or current_token_value() == "[":
+            args_list()
+        else:
+            raise SyntaxError("Expected a valid value")
 
 
 # Função para análise sintática da regra <Optional-Value>
 def optional_value():
     if current_token_value() == "=":
         next_token()
-        assignment_value()
+        logical_and_expression()
 
 
 # Função para análise sintática da regra <Variable-Block>
@@ -232,7 +256,7 @@ def variable_same_line():
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
         save_error(e)
-        #variable_same_line()
+        # variable_same_line()
 
 
 # Função para análise sintática da regra <Constant-Block>
@@ -258,7 +282,7 @@ def constant():
                 next_token()
                 if current_token_value() == "=":
                     next_token()
-                    assignment_value()
+                    logical_and_expression()
                     constant_same_line()
                     if current_token_value() == ";":
                         next_token()
@@ -283,7 +307,7 @@ def constant_same_line():
                 next_token()
                 if current_token_value() == "=":
                     next_token()
-                    assignment_value()
+                    logical_and_expression()
                     constant_same_line()
                 else:
                     raise SyntaxError("Expected ';'")
@@ -291,7 +315,7 @@ def constant_same_line():
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
         save_error(e)
-        #constant_same_line()
+        # constant_same_line()
 
 
 # Função para análise sintática da regra <Class-Block>
@@ -316,7 +340,7 @@ def class_block():
                     raise SyntaxError("Expected a valid class identifier")
     except SyntaxError as e:
         save_error(e)
-        class_block() 
+        class_block()
 
 
 # Função para análise sintática da regra <Class-Extends>
@@ -421,7 +445,7 @@ def constructor():
             raise SyntaxError("Expected '('")
 
 
-#----------------------------- Teste -------------------------------------------------------------------------------
+# ----------------------------- Teste -------------------------------------------------------------------------------
 def main_class():
     if current_token_value() == "class":
         next_token()
@@ -448,7 +472,6 @@ def main_class_content():
 
 def object_block():
     if current_token_value() == "objects":
-        print('\n\ntesntando\n\n')
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -503,7 +526,7 @@ def object_declaration():
                 raise SyntaxError("Expected a valid identifier")
     except SyntaxError as e:
         save_error(e)
-        object_declaration() 
+        object_declaration()
 
 
 def object_same_line():
@@ -540,7 +563,9 @@ def object_same_line():
                 raise SyntaxError("Expected '='")
         else:
             raise SyntaxError("Expected a valid identifier")
-#------------------------------------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------------------------------------
 
 
 def assignment_method():
@@ -584,16 +609,312 @@ def parameter_value_list():
         parameter()
 
 
+# Função para análise sintática da regra <Unary-Expression>
+def unary_expression():
+    assignment_value()
+    unary_expression_list()
+
+
+# Função para análise sintática da regra <Unary-Expression-List>
+def unary_expression_list():
+    if current_token_value() in ["++", "--"]:
+        next_token()
+
+
+# Função para análise sintática da regra <Multiplicative-Expression>
+def multiplicative_expression():
+    unary_expression()
+    multiplicative_expression_list()
+
+
+# Função para análise sintática da regra <Multiplicative-Expression-List>
+def multiplicative_expression_list():
+    if current_token_value() in ["*", "/"]:
+        next_token()
+        multiplicative_expression()
+
+
+# Função para análise sintática da regra <Additive-Expression>
+def additive_expression():
+    multiplicative_expression()
+    additive_expression_list()
+
+
+# Função para análise sintática da regra <Additive-Expression-List>
+def additive_expression_list():
+    if current_token_value() in ["+", "-"]:
+        next_token()
+        additive_expression()
+
+
+# Função para análise sintática da regra <Relational-Expression>
+def relational_expression():
+    additive_expression()
+    relational_expression_list()
+
+
+# Função para análise sintática da regra <Relational-Expression-List>
+def relational_expression_list():
+    if current_token_value() in ["<", ">", "<=", ">="]:
+        next_token()
+        relational_expression()
+
+
+# Função para análise sintática da regra <Equality-Expression>
+def equality_expression():
+    relational_expression()
+    equality_expression_list()
+
+
+# Função para análise sintática da regra <Equality-Expression-List>
+def equality_expression_list():
+    if current_token_value() in ["!=", "=="]:
+        next_token()
+        equality_expression()
+
+
+# Função para análise sintática da regra <Logical-Not-Expression>
+def logical_not_expression():
+    if current_token_value() == "!":
+        next_token()
+        logical_not_expression()
+    else:
+        equality_expression()
+
+
+# Função para análise sintática da regra <Logical-Or-Expression-Tail>
+def logical_or_expression_tail():
+    if current_token_value() == "||":
+        next_token()
+        logical_and_expression()
+
+
+# Função para análise sintática da regra <Logical-Or-Expression>
+def logical_or_expression():
+    if current_token_value() == "(":
+        next_token()
+        logical_not_expression()
+        logical_or_expression_tail()
+        if current_token_value() == ")":
+            next_token()
+            logical_and_expression_tail()
+        else:
+            raise SyntaxError("Expected ')'")
+    else:
+        logical_not_expression()
+        logical_or_expression_tail()
+
+
+# Função para análise sintática da regra <Logical-And-Expression-Tail>
+def logical_and_expression_tail():
+    if current_token_value() == "&&":
+        next_token()
+        logical_and_expression()
+
+
+# Função para análise sintática da regra <Logical-And-Expression>
+def logical_and_expression():
+    if current_token_value() == "(":
+        next_token()
+        logical_or_expression()
+        logical_and_expression_tail()
+        if current_token_value() == ")":
+            next_token()
+            logical_and_expression_tail()
+        else:
+            raise SyntaxError("Expected ')'")
+    else:
+        logical_or_expression()
+        logical_and_expression_tail()
+
+
+def command():
+    if current_token_value() == "print":
+        print_command()
+    else:
+        read_command()
+
+
+def statement():
+    if current_token_value() == "if":
+        if_statement()
+    elif current_token_value() == "for":
+        for_statement()
+    elif current_token_value() == "pass":
+        next_token()
+
+
+def assignment():
+    definition_access_array()
+    object_value()
+    if current_token_value() == "=":
+        next_token()
+        logical_and_expression()
+        if current_token_value() == ";":
+            next_token()
+        else:
+            raise SyntaxError("Expected ';'")
+
+
 def statement_sequence():
-    pass
+    try:
+        if current_token_value() in ["print", "read"]:
+            command()
+            statement_sequence()
+        elif current_token_value() in ["if", "for", "pass"]:
+            statement()
+            statement_sequence()
+        elif check_identifier():
+            next_token()
+            assignment()
+            statement_sequence()
+    except SyntaxError as e:
+        save_error(e)
+        statement_sequence()
+
+
+# Função para análise sintática da regra <If-Statement>
+def if_statement():
+    if current_token_value() == "if":
+        next_token()
+        if current_token_value() == "(":
+            next_token()
+            logical_and_expression()
+            if current_token_value() == ")":
+                next_token()
+                if current_token_value() == "then":
+                    next_token()
+                    if current_token_value() == "{":
+                        next_token()
+                        statement_sequence()
+                        if current_token_value() == "}":
+                            next_token()
+                            else_statement()
+                        else:
+                            raise SyntaxError("Expected '}' after if statement body")
+                    else:
+                        raise SyntaxError("Expected '{' after 'then'")
+                else:
+                    raise SyntaxError("Expected 'then' after condition in if statement")
+            else:
+                raise SyntaxError("Expected ')' after expression in if statement")
+
+
+# Função para análise sintática da regra <Else-Statement>
+def else_statement():
+    if current_token_value() == "else":
+        next_token()
+        if current_token_value() == "{":
+            next_token()
+            statement_sequence()
+            if current_token_value() == "}":
+                next_token()
+            else:
+                raise SyntaxError("Expected '}' after else statement body")
+    # else: No else part, so do nothing
+
+
+# Função para análise sintática da regra <For-Variable-Initialization>
+def for_variable_initialization():
+    if check_identifier():
+        next_token()
+        if current_token_value() == "=":
+            next_token()
+            if current_token_type() in ["NUM", "IDE"]:
+                next_token()
+            else:
+                raise SyntaxError("Expected a valid value in For Loop variable")
+        else:
+            raise SyntaxError("Expected '='")
+    else:
+        raise SyntaxError("Expected a valid identifier")
+
+
+# Função para análise sintática da regra <For-Statement>
+def for_statement():
+    if current_token_value() == "for":
+        next_token()
+        if current_token_value() == "(":
+            next_token()
+            for_variable_initialization()
+            next_token()
+            logical_and_expression()
+            if current_token_value() == ";":
+                next_token()
+                unary_expression()
+                if current_token_value() == ")":
+                    next_token()
+                    if current_token_value() == "{":
+                        next_token()
+                        statement_sequence()
+                        if current_token_value() == "}":
+                            next_token()
+                        else:
+                            raise SyntaxError("Expected '}' ")
+                    else:
+                        raise SyntaxError("Expected '{' ")
+                else:
+                    raise SyntaxError("Expected ')'")
+            else:
+                raise SyntaxError("Expected ';'")
+        else:
+            raise SyntaxError("Expected '('")
+
+
+# Função para análise sintática da regra <Print-Command>
+def print_command():
+    if current_token_value() == "print":
+        next_token()
+        if current_token_value() == "(":
+            next_token()
+            logical_and_expression()
+            if current_token_value() == ")":
+                next_token()
+                if current_token_value() == ";":
+                    next_token()
+                else:
+                    raise SyntaxError("Expected ';'")
+            else:
+                raise SyntaxError("Expected ')'")
+        else:
+            raise SyntaxError("Expected '('")
+
+
+# Função para análise sintática da regra <Read-Command>
+def read_command():
+    try:
+        if current_token_value() == "read":
+            next_token()
+            if current_token_value() == "(":
+                next_token()
+                if check_identifier():
+                    next_token()
+                    object_value()
+                    if current_token_value() == ")":
+                        next_token()
+                        if current_token_value() == ";":
+                            next_token()
+                        else:
+                            raise SyntaxError("Expected ';'")
+                    else:
+                        raise SyntaxError("Expected ')'")
+                else:
+                    raise SyntaxError("Expected a valid identifier")
+            else:
+                raise SyntaxError("Expected '('")
+    except SyntaxError as e:
+        save_error(e)
 
 
 def program():
-    constant_block()
-    variable_block()
-    class_block()
-    object_block()
+    # constant_block()
+    # variable_block()
+    # for_statement()
+    if_statement()
+    # class_block()
+    # object_block()
     # main_class()
+
 
 def main():
     global tokens, index
@@ -603,17 +924,13 @@ def main():
     for arquivo in arquivos:
         tokens = lexico(pasta=pasta, arquivo=arquivo)
         index = 0
-        # Chame a função correspondente à regra inicial aqui
-        # Por exemplo, para a regra <Variable-Block>:
         try:
             program()
         except SyntaxError as e:
             save_error(e)
-        
 
-        print(*errors, sep='\n')
+        print(*errors, sep="\n")
 
 
 if __name__ == "__main__":
     main()
-    

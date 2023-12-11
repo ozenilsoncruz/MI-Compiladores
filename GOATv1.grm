@@ -111,6 +111,11 @@ TYPE = ('int' | 'string' | 'boolean' | 'real') | ('int' | 'string' | 'boolean' |
                         | <Logical-Or-Expression> '||' <Logical-Not-Expression>
                         | '(' <Logical-Or-Expression> ')'
 
+<Logical-Or-Expression> ::= '(' <Logical-Not-Expression> <Logical-Or-Expression-Tail> ')'
+                            | <Logical-Not-Expression> <Logical-Or-Expression-Tail>
+<Logical-Or-Expression-Tail> ::= | '||' <Logical-Not-Expression> <Logical-Or-Expression-Tail> 
+                        
+
 <Logical-And-Expression> ::= <Logical-Or-Expression>
                           | <Logical-And-Expression> '&&' <Logical-Or-Expression>
                           | '(' <Logical-And-Expression> ')'
