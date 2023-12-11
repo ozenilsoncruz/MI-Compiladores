@@ -21,18 +21,26 @@ class Carro {
     }
     
     constructor (int a, int c){
-        this.a = a;
+        this.a;
         this.b = 10;
-        this.c = c;
+        this.c = ;
     }
     
     methods{
+        void test3(){
+            
+        }
+
         int test(){
             return 0;
         }
-        
-        void test(){
+
+        int test2(){
             
+        }
+
+        void test4(){
+            return 0;
         }
         
     }
@@ -51,5 +59,22 @@ class Corola extends Carro {
 }
 
 objects {
-    Corola corola1 = Carro->constructor(a, b), corola2 = Carro->constructor(c, b);
+    Corola c = Carro->constructor(a, b), c2 = Carro->constructor(c, b);
+    Corola c3 = Carro-constructor(a, b);
+    Corola c4 = Carro->constructor(a, b) c5 = Carro->constructor(c, b);
+    Corola c6 = Carro->constructor(a b);
+    c7 = Carro->constructor(a, b);
+    Corola c8 = Carro(a, b);
+}
+
+class main {
+    variables{
+        int a = 10, b = 11;
+    }
+    
+    objects {
+        Corola c = Carro->constructor(a, b), c2 = Carro->constructor(c, b);
+    }
+
+
 }
