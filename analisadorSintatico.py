@@ -959,6 +959,11 @@ def main():
             for e in errors:
                 erros += e + '\n'
             
+            if erros.strip() == "":
+                erros = "Sucesso!"
+                
+                
+            
             salvar_arquivo(pasta, 
                         arquivo.split('.')[0]+'-saida.txt', 
                         erros)
