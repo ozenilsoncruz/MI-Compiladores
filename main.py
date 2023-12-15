@@ -1,34 +1,24 @@
+import os
+from sintatico import SyntacticParse
 from lexico import lexico
 from config import salvar_arquivo
-from sintatico import SyntacticParser
-import os
 
+class MainExecutor:
+    def __init__(self, folder):
+        self.folder = folder
 
-class MainExecutor(SyntacticParser):
-    def __init__(self):
-        super().__init__()
+    def process_file(self, file_name):
+        tokens = lexico(pasta=self.folder, arquivo=file_name)
+        error_messages = SyntacticParse(tokens)
+        output_file = file_name.split(".")[0] + "-saida.txt"
+        salvar_arquivo(self.folder, output_file, error_messages)
 
-    def process_files(self, folder_path="./files"):
-        files = []
-        for filename in os.listdir(folder_path):
-            if "saida" not in filename:
-                files.append(filename)
-
-        for file in files:
-            self.tokens = lexico(pasta=folder_path, arquivo=file)
-            self.index = 0
-            self.errors = []
-            try:
-                self.program()
-            except SyntaxError as e:
-                self.save_error(e)
-
-            error_message = "\n".join(self.errors) if self.errors else "Sucesso!"
-
-            save_path = f"{file.split('.')[0]}-saida.txt"
-            salvar_arquivo(folder_path, save_path, error_message)
-
+    def run(self):
+        files = os.listdir(self.folder)
+        for file_name in files:
+            if "saida" not in file_name:
+                self.process_file(file_name)
 
 if __name__ == "__main__":
-    main_executor = MainExecutor()
-    main_executor.process_files()
+    analisador_main = MainExecutor("./files")
+    analisador_main.run()
