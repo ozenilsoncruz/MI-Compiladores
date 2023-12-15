@@ -1,7 +1,6 @@
-from analisadorLexico import lexico
+from lexico import lexico
 from config import palavras_reservadas, salvar_arquivo
 import os
-import re
 
 # Variáveis globais
 tokens = []
@@ -398,21 +397,21 @@ def method():
                             statement_sequence()
                             if tipo:
                                 if current_token_value() == "return":
-                                        next_token()
-                                        assignment_value()
+                                    next_token()
+                                    assignment_value()
                                     # if value() or check_identifier():
                                     #     next_token()
-                                        if current_token_value() == ";":
+                                    if current_token_value() == ";":
+                                        next_token()
+                                        if current_token_value() == "}":
                                             next_token()
-                                            if current_token_value() == "}":
-                                                next_token()
-                                                method()
-                                            else:
-                                                raise SyntaxError("Expected '}'")
+                                            method()
                                         else:
-                                            raise SyntaxError("Expected ';'")
-                                    # else:
-                                    #     raise SyntaxError("Expected a valid value")
+                                            raise SyntaxError("Expected '}'")
+                                    else:
+                                        raise SyntaxError("Expected ';'")
+                                # else:
+                                #     raise SyntaxError("Expected a valid value")
                                 else:
                                     raise SyntaxError("Expected 'return'")
                             else:
@@ -945,7 +944,7 @@ def main():
     arquivos = os.listdir(pasta)
 
     for arquivo in arquivos:
-        if 'saida' not in arquivo:
+        if "saida" not in arquivo:
             tokens = lexico(pasta=pasta, arquivo=arquivo)
             index = 0
             try:
@@ -953,20 +952,18 @@ def main():
             except SyntaxError as e:
                 save_error(e)
 
-            #print(*errors, sep="\n")
-            
+            # print(*errors, sep="\n")
+
             erros = ""
             for e in errors:
-                erros += e + '\n'
-            
+                erros += e + "\n"
+
             if erros.strip() == "":
                 erros = "Sucesso!"
-                
-                
-            
-            salvar_arquivo(pasta, 
-                        arquivo.split('.')[0]+'-saida.txt', 
-                        erros)
+
+            print(pasta, arquivo.split(".")[0] + "-saida.txt")
+
+            salvar_arquivo(pasta, arquivo.split(".")[0] + "-saida.txt", erros)
 
 
 if __name__ == "__main__":
