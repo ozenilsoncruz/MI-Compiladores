@@ -24,3 +24,4 @@ class MainExecutor:
 if __name__ == "__main__":
     analisador_main = MainExecutor("./files")
     analisador_main.run()
+    

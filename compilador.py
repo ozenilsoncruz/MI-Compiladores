@@ -22,6 +22,8 @@ semantic_errors_table = {
     "class_not_declared": "Class with identifier not declared",
     "object_not_declared": "Object with identifier not declared",
     "identifier_not_declared": "Identifier not declared",
+    "incorrect_type": "Incorrect type",
+    
     # "method_not_return": "Method with identifier not return",
     # "method_return": "Method void with identifier return",
     # "method_return_type": "Method with incorrect return type",
@@ -34,7 +36,7 @@ semantic_errors_table = {
 
 
 # LEXEMA | TIPO | ESCOPO | BLOCO
-symbols_table = {}
+symbols_table = []
 
 
 lexeme = ""
@@ -219,6 +221,13 @@ def array():
 
 # int a  = carro
 def assignment_value():
+    type_equivalent = {
+        "int": "NUM",
+        "real" : "NUM",
+        "string": "STR",
+        "boolean": "KEY",
+    }
+    
     if check_identifier():
         symbol = search_identifier(lexeme, escope)
         if symbol:
@@ -230,6 +239,8 @@ def assignment_value():
         definition_access_array()
         object_value()
     elif value():
+        if current_token_type() != type_equivalent[type]:
+            save_semantic_error(semantic_errors_table["incorrect_type"])
         next_token()
     elif current_token_value() == "[":
         array()
@@ -942,6 +953,7 @@ def read_command():
 
 
 def program():
+    global escope
     escope = "global"
     constant_block()
     variable_block()
@@ -949,6 +961,8 @@ def program():
     object_block()
     escope = "main"
     main_class()
+    print(symbols_table)
+    print(semantic_errors)
 
 
 def CompilerParse(tokens_list: list):
