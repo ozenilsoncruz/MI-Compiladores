@@ -1,7 +1,8 @@
 import os
-from sintatico import SyntacticParse
+from compilador import CompilerParse
 from lexico import lexico
 from config import salvar_arquivo
+
 
 class MainExecutor:
     def __init__(self, folder):
@@ -9,7 +10,7 @@ class MainExecutor:
 
     def process_file(self, file_name):
         tokens = lexico(pasta=self.folder, arquivo=file_name)
-        error_messages = SyntacticParse(tokens)
+        error_messages = CompilerParse(tokens)
         output_file = file_name.split(".")[0] + "-saida.txt"
         salvar_arquivo(self.folder, output_file, error_messages)
 
@@ -18,6 +19,7 @@ class MainExecutor:
         for file_name in files:
             if "saida" not in file_name:
                 self.process_file(file_name)
+
 
 if __name__ == "__main__":
     analisador_main = MainExecutor("./files")
