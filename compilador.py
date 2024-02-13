@@ -12,17 +12,17 @@ delimiters_with_keywords = delimiters + key_words
 
 
 semantic_errors_table = {
-    "variable_already_declared": "Variable with identifier already declared",
-    "variable_incorrect_type": "Variable with incorrect type",
-    "method_already_declared": "Method with identifier already declared",
-    "class_already_declared": "Class with identifier already declared",
-    "object_already_declared": "Object with identifier already declared",
-    "variable_not_declared": "Variable with identifier not declared",
-    "method_not_declared": "Method with identifier not declared",
-    "class_not_declared": "Class with identifier not declared",
-    "object_not_declared": "Object with identifier not declared",
+    "already_declared": "with identifier already declared",
+    "not_declared": "with identifier not declared",
     "identifier_not_declared": "Identifier not declared",
-    "incorrect_type": "Incorrect type",
+    "incorrect_type": "with incorrect type",
+    # "method_already_declared": "Method with identifier already declared",
+    # "class_already_declared": "Class with identifier already declared",
+    # "object_already_declared": "Object with identifier already declared",
+    # "variable_incorrect_type": "Variable with incorrect type",
+    # "variable_not_declared": "Variable with identifier not declared",
+    # "method_not_declared": "Method with identifier not declared",
+    # "class_not_declared": "Class with identifier not declared",
     
     # "method_not_return": "Method with identifier not return",
     # "method_return": "Method void with identifier return",
@@ -44,11 +44,18 @@ type = ""
 escope = ""
 block = ""
 
+type_equivalent = {
+    "int": "NUM",
+    "real" : "NUM",
+    "string": "STR",
+    "boolean": "KEY",
+}
+    
 
 
-def search_identifier(lexeme: str, escope: str):
+def search_identifier(lexeme: str, escope: str, block: str):
     for symbol in symbols_table:
-        if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
+        if symbol["lexeme"] == lexeme and (symbol["escope"] == escope or symbol["block"] == block):
             return symbol
     
 
@@ -64,7 +71,11 @@ def insert_identifier(lexeme: str, type: str, escope: str, bloco: str):
     )
 
 
-def save_semantic_error(message):
+def save_semantic_error(message: str):
+    
+    if message.startswith("with"):
+        message = block + ' ' + message
+    
     msg_error = f"Line {current_token_line()} - {message}"
     semantic_errors.append(msg_error)
 
@@ -221,25 +232,20 @@ def array():
 
 # int a  = carro
 def assignment_value():
-    type_equivalent = {
-        "int": "NUM",
-        "real" : "NUM",
-        "string": "STR",
-        "boolean": "KEY",
-    }
+    global type_equivalent
     
     if check_identifier():
-        symbol = search_identifier(lexeme, escope)
+        symbol = search_identifier(lexeme, escope, block)
         if symbol:
             if symbol["type"] != type:
-                save_semantic_error(semantic_errors_table["variable_incorrect_type"])
+                save_semantic_error(semantic_errors_table["incorrect_type"])
         else:
             save_semantic_error(semantic_errors_table["identifier_not_declared"])
         next_token()
         definition_access_array()
         object_value()
     elif value():
-        if current_token_type() != type_equivalent[type]:
+        if type_equivalent.get(type) is not None and current_token_type() != type_equivalent[type]:
             save_semantic_error(semantic_errors_table["incorrect_type"])
         next_token()
     elif current_token_value() == "[":
@@ -273,7 +279,7 @@ def optional_value():
 def variable_block():
     global block
     if current_token_value() == "variables":
-        block = "variables"
+        block = "Variable"
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -290,8 +296,8 @@ def variable():
     try:
         if check_type():
             if check_identifier():
-                if search_identifier(lexeme, escope):
-                    save_semantic_error(semantic_errors_table["variable_already_declared"])
+                if search_identifier(lexeme, escope, block):
+                    save_semantic_error(semantic_errors_table["already_declared"])
                 else:
                     insert_identifier(lexeme, type, escope, block)
                 next_token()
@@ -324,7 +330,9 @@ def variable_same_line():
 
 
 def constant_block():
+    global block
     if current_token_value() == "const":
+        block = "Constant"
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -341,6 +349,10 @@ def constant():
     try:
         if check_type():
             if check_identifier():
+                if search_identifier(lexeme, escope, block):
+                    save_semantic_error(semantic_errors_table["already_declared"])
+                else:
+                    insert_identifier(lexeme, type, escope, block)
                 next_token()
                 if current_token_value() == "=":
                     next_token()
@@ -380,10 +392,16 @@ def constant_same_line():
 
 def class_block():
     try:
+        global block
         if current_token_value() == "class":
             next_token()
             if current_token_value() != "main":
                 if check_identifier():
+                    
+                    block = "Class "+ lexeme
+                    type_equivalent[lexeme] = lexeme
+                    
+                    
                     next_token()
                     class_extends()
                     if current_token_value() == "{":
@@ -540,7 +558,9 @@ def main_class_content():
 
 
 def object_block():
+    global block
     if current_token_value() == "objects":
+        block = "Object"
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -554,10 +574,16 @@ def object_block():
 
 
 def object_declaration():
+    global type
     try:
         if check_identifier():
+            type = lexeme
             next_token()
             if check_identifier():
+                if search_identifier(lexeme, escope, block):
+                    save_semantic_error(semantic_errors_table["already_declared"])
+                else:
+                    insert_identifier(lexeme, type, escope, block)
                 next_token()
                 if current_token_value() == "=":
                     next_token()
@@ -955,13 +981,17 @@ def read_command():
 def program():
     global escope
     escope = "global"
+    
     constant_block()
     variable_block()
     class_block()
     object_block()
+    
     escope = "main"
+    
     main_class()
     print(symbols_table)
+    print()
     print(semantic_errors)
 
 

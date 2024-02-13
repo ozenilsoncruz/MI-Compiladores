@@ -1,13 +1,18 @@
-
-
-variables{
-    string b = "";
-    int a = b;
-    
+const {
+    string c = "";
+    int d = c;
 }
 
+variables{
+    int a = "10";
+	int b = 10;
+    real d;
+}
 
+class Carro {
+  
+}
 
-class main {
-    a = 0;
+objects {
+    Carro j = Carro->constructor(a, b);
 }
