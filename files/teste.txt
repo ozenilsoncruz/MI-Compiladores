@@ -1,18 +1,30 @@
 const {
-    string c = "";
-    int d = c;
+    int a = "10";
+	int b = 10;
+    
 }
 
 variables{
-    int a = "10";
-	int b = 10;
+    string c = "";
+    int d = c;
     real d;
+    int e = 20;
 }
 
 class Carro {
-  
+    variables{
+        int a, b;
+    }
+
+    constructor (int a, real b){
+        this.a = a;
+        this.b = b;
+    }
 }
 
 objects {
     Carro j = Carro->constructor(a, b);
+    Carro j = Moto->constructor(a, b);
+    Moto j = Carro->constructor(a, b);
 }
+

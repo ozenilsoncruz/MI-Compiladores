@@ -53,20 +53,30 @@ type_equivalent = {
     
 
 
-def search_identifier(lexeme: str, escope: str, block: str):
+def search_identifier():
+    global lexeme, escope, block
+    
     for symbol in symbols_table:
         if symbol["lexeme"] == lexeme and (symbol["escope"] == escope or symbol["block"] == block):
             return symbol
     
 
 
-def insert_identifier(lexeme: str, type: str, escope: str, bloco: str):
+def insert_identifier():
+    global lexeme, type, escope, block
+    
+    lexeme, escope, block
+    if block in ['Variable', 'Constant', 'Object', 'Main']:
+        escope = 'global'
+    else: 
+        escope = 'local'
+    
     symbols_table.append(
         {
             "lexeme": lexeme,
             "type": type,
             "escope": escope,
-            "block": bloco,
+            "block": block,
         }
     )
 
@@ -235,7 +245,7 @@ def assignment_value():
     global type_equivalent
     
     if check_identifier():
-        symbol = search_identifier(lexeme, escope, block)
+        symbol = search_identifier()
         if symbol:
             if symbol["type"] != type:
                 save_semantic_error(semantic_errors_table["incorrect_type"])
@@ -279,7 +289,8 @@ def optional_value():
 def variable_block():
     global block
     if current_token_value() == "variables":
-        block = "Variable"
+        if block == "":
+            block = "Variable"
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -296,10 +307,10 @@ def variable():
     try:
         if check_type():
             if check_identifier():
-                if search_identifier(lexeme, escope, block):
+                if search_identifier():
                     save_semantic_error(semantic_errors_table["already_declared"])
                 else:
-                    insert_identifier(lexeme, type, escope, block)
+                    insert_identifier()
                 next_token()
                 optional_value()
                 variable_same_line()
@@ -349,10 +360,10 @@ def constant():
     try:
         if check_type():
             if check_identifier():
-                if search_identifier(lexeme, escope, block):
+                if search_identifier():
                     save_semantic_error(semantic_errors_table["already_declared"])
                 else:
-                    insert_identifier(lexeme, type, escope, block)
+                    insert_identifier()
                 next_token()
                 if current_token_value() == "=":
                     next_token()
@@ -401,7 +412,11 @@ def class_block():
                     block = "Class "+ lexeme
                     type_equivalent[lexeme] = lexeme
                     
-                    
+                    if search_identifier():
+                        save_semantic_error(semantic_errors_table["already_declared"])
+                    else:
+                        insert_identifier()
+                        
                     next_token()
                     class_extends()
                     if current_token_value() == "{":
@@ -580,10 +595,10 @@ def object_declaration():
             type = lexeme
             next_token()
             if check_identifier():
-                if search_identifier(lexeme, escope, block):
+                if search_identifier():
                     save_semantic_error(semantic_errors_table["already_declared"])
                 else:
-                    insert_identifier(lexeme, type, escope, block)
+                    insert_identifier()
                 next_token()
                 if current_token_value() == "=":
                     next_token()
@@ -979,15 +994,14 @@ def read_command():
 
 
 def program():
-    global escope
-    escope = "global"
+
     
     constant_block()
     variable_block()
     class_block()
     object_block()
     
-    escope = "main"
+
     
     main_class()
     print(symbols_table)
