@@ -1,16 +1,8 @@
 const {
-    int a = "10";
-	int b = 10;
+    string s = "teste";
     
 }
 
-variables{
-    string c = "";
-    int d = c;
-    real d;
-    int e = 20, f = 21;
-    int test;
-}
 
 class Carro {
     variables{
@@ -19,12 +11,12 @@ class Carro {
         int a;
     }
 
-    constructor (int a, real b){
+    constructor (int a, string b){
         this.a = b;
     }
 
     methods{
-        int test(){
+        string test(int x){
             return a;
         }
 
@@ -37,9 +29,14 @@ class Carro {
 
 
 objects {
-    Carro j = Carro->constructor();
-    Carro k = Moto->constructor();
-    Moto l = Carro->constructor();
-    Moto2 l = Carro->constructor();
+    Carro j = Carro->constructor(20, 20);
+    Carro m = Carro->constructor(s);
 }
 
+
+class main {
+    variables{
+        int z = m -> test(10);
+    }
+    
+}

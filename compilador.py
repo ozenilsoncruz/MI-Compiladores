@@ -10,12 +10,10 @@ delimiters = ["{", "}", ";"]
 delimiters_with_keywords = delimiters + key_words
 
 
-
 semantic_errors_table = {
-    "already_declared": "with identifier already declared",
-    "not_declared": "with identifier not declared",
-    "identifier_not_declared": "Identifier not declared",
-    "incorrect_type": "with incorrect type"
+    "already_declared": "Identifier already declared",
+    "not_declared": "Identifier not declared",
+    "incorrect_type": "Incorrect type",
 }
 
 
@@ -26,49 +24,88 @@ symbols_table = []
 lexeme = ""
 type = ""
 escope = ""
-block = ""
+
+expected_type = ""
+current_parameter = {}
+parameter_list = []
+
+argument_list = []
 
 type_equivalent = {
     "int": "NUM",
-    "real" : "NUM",
+    "real": "NUM",
     "string": "STR",
     "boolean": "KEY",
 }
-    
+
+is_argument = False
 
 
 def search_identifier():
-    global lexeme, escope, block
-    
+    global lexeme, escope
+
     for symbol in symbols_table:
-        if symbol["lexeme"] == lexeme and symbol["escope"] == escope and (symbol["block"] == block or symbol["escope"] == 'global'):
+        if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
             return symbol
 
 
 def insert_identifier():
-    global lexeme, type, escope, block
-    
-    lexeme, escope, block
-    if block in ['Variable', 'Constant', 'Object', 'Main']:
-        escope = 'global'
-    else: 
-        escope = 'local'
-    
+    global lexeme, type, escope
+
     symbols_table.append(
         {
             "lexeme": lexeme,
             "type": type,
             "escope": escope,
-            "block": block,
         }
     )
 
 
+def save_parameter():
+    global current_parameter
+    parameter_list.append(current_parameter)
+    current_parameter = {}
+
+
+def save_argument():
+    global current_parameter
+    argument_list.append(current_parameter)
+    current_parameter = {}
+
+
+def update_identifier_parameters():
+    global lexeme, escope, parameter_list
+    for symbol in symbols_table:
+        if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
+            symbol["parameters_list"] = parameter_list
+            break
+    parameter_list = []
+
+
+def compare_lists(expected_list):
+    if len(expected_list) != len(argument_list):
+        save_semantic_error(
+            f"Incorrect number of arguments, expected {len(expected_list)}, received {len(argument_list)}"
+        )
+        return False
+    for i, (dict1, dict2) in enumerate(zip(expected_list, argument_list), start=1):
+        if dict1["type"] != dict2["type"]:
+            save_semantic_error(
+                f"Incorrect type of arguments, expected {dict1['type']} in parameter number {i}, received {dict2['type']}"
+            )
+            return False
+    return True
+
+
+def get_key_from_value(value):
+    for key, val in type_equivalent.items():
+        if val == value:
+            return key
+    return None
+
+
 def save_semantic_error(message: str):
-    
-    if message.startswith("with"):
-        message = block + ' ' + message
-    
+    global lexeme
     msg_error = f"Line {current_token_line()} - {message}"
     semantic_errors.append(msg_error)
 
@@ -115,15 +152,22 @@ def save_error(e: SyntaxError, recovery_point=None):
 
 def check_identifier():
     global lexeme
-    lexeme = current_token_value() 
+    lexeme = current_token_value()
+    return current_token_type() == "IDE"
+
+
+def check_identifier_syntactic():
     return current_token_type() == "IDE"
 
 
 def check_object_declaration():
     global lexeme
-    if lexeme not in type_equivalent and not any(symbol["lexeme"] == lexeme and "Class" in symbol["block"] for symbol in symbols_table):
+    if lexeme not in type_equivalent and not any(
+        symbol["lexeme"] == lexeme and "Class" in symbol["escope"]
+        for symbol in symbols_table
+    ):
         save_semantic_error(f"Object with undefined type '{lexeme}'")
-    else: 
+    else:
         return lexeme
 
 
@@ -138,12 +182,24 @@ def value():
 
 
 def method_call():
+    global type, lexeme, escope, argument_list, is_argument
+
     if check_identifier():
+        symbol = search_identifier()
+        escope = "Class " + type
+        symbol = search_identifier()
+        if not symbol:
+            save_semantic_error(f"Method '{lexeme}' not declared")
         next_token()
         if current_token_value() == "(":
             next_token()
+            argument_list = []
             args_list()
+            if symbol:
+                type = symbol["type"]
+                compare_lists(symbol["parameters_list"])
             if current_token_value() == ")":
+                is_argument = False
                 next_token()
             else:
                 raise SyntaxError("Expected ')'")
@@ -154,13 +210,17 @@ def method_call():
 
 
 def object_value():
+    global type
     if current_token_value() == ".":
         next_token()
         if check_identifier():
+            # TODO: Check if the attribute exists
             next_token()
         else:
             raise SyntaxError("Expected a valid identifier")
     if current_token_value() == "->":
+        symbol = search_identifier()
+        type = symbol["type"]
         next_token()
         method_call()
 
@@ -187,15 +247,27 @@ def definition_access_array():
 
 
 def check_type():
-    global type
+    global type, expected_type
     if current_token_value() in ["int", "string", "real", "boolean"]:
         type = current_token_value()
         next_token()
         if current_token_value() == "[":
             type += "(Array)"
-        definition_access_array() #int[b][c] a =
+        definition_access_array()  # int[b][c] a =
+        expected_type = type
         return True
     return False
+
+
+def check_type_syntactic():
+    if current_token_value() in ["int", "string", "real", "boolean"]:
+        type = current_token_value()
+        next_token()
+        if current_token_value() == "[":
+            type += "(Array)"
+        definition_access_array()  # int[b][c] a =
+        return type
+    return None
 
 
 def possible_value():
@@ -233,29 +305,42 @@ def array():
 
 # int a  = carro
 def assignment_value():
-    global type_equivalent
-    
+    global type_equivalent, current_parameter, type
     if check_identifier():
         symbol = search_identifier()
-        if symbol:
-            if symbol["type"] != type:
-                save_semantic_error(semantic_errors_table["incorrect_type"])
-        else:
-            save_semantic_error(semantic_errors_table["identifier_not_declared"])
+        if not symbol:
+            save_semantic_error(semantic_errors_table["not_declared"])
+            type = ""
         next_token()
         definition_access_array()
         object_value()
-    elif value():
-        if type_equivalent.get(type) is not None and current_token_type() != type_equivalent[type]:
+        if expected_type != type and not is_argument:
             save_semantic_error(semantic_errors_table["incorrect_type"])
+        type = symbol["type"]
+        current_parameter = {"lexeme": lexeme, "type": type}
+        save_argument()
+    elif value():
+        if (
+            type_equivalent.get(type) is not None
+            and current_token_type() != type_equivalent[type]
+            and not is_argument
+        ):
+            save_semantic_error(semantic_errors_table["incorrect_type"])
+        type = current_token_type()
+        current_parameter = {"lexeme": lexeme, "type": get_key_from_value(type)}
+        save_argument()
         next_token()
     elif current_token_value() == "[":
         array()
+        current_parameter = {"lexeme": lexeme, "type": type}
+        save_argument()
     else:
         raise SyntaxError("Expected a valid value")
 
 
 def args_list():
+    global is_argument
+    is_argument = True
     if check_identifier() or value() or current_token_value() == "[":
         logical_and_expression()
         assignment_value_list()
@@ -271,17 +356,18 @@ def assignment_value_list():
 
 
 def optional_value():
+    global is_argument
     if current_token_value() == "=":
         next_token()
-        
+        is_argument = False
         logical_and_expression()
 
 
 def variable_block():
-    global block
+    global escope
     if current_token_value() == "variables":
-        if "Class" not in block:
-            block = "Variable"
+        if "Class" not in escope:
+            escope = "global"
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -322,6 +408,10 @@ def variable_same_line():
         if current_token_value() == ",":
             next_token()
             if check_identifier():
+                if search_identifier():
+                    save_semantic_error(semantic_errors_table["already_declared"])
+                else:
+                    insert_identifier()
                 next_token()
                 optional_value()
                 variable_same_line()
@@ -332,9 +422,9 @@ def variable_same_line():
 
 
 def constant_block():
-    global block
+    global escope
     if current_token_value() == "const":
-        block = "Constant"
+        escope = "global"
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -348,6 +438,7 @@ def constant_block():
 
 
 def constant():
+    global is_argument
     try:
         if check_type():
             if check_identifier():
@@ -358,6 +449,7 @@ def constant():
                 next_token()
                 if current_token_value() == "=":
                     next_token()
+                    is_argument = False
                     logical_and_expression()
                     constant_same_line()
                     if current_token_value() == ";":
@@ -375,13 +467,19 @@ def constant():
 
 
 def constant_same_line():
+    global is_argument
     try:
         if current_token_value() == ",":
             next_token()
             if check_identifier():
+                if search_identifier():
+                    save_semantic_error(semantic_errors_table["already_declared"])
+                else:
+                    insert_identifier()
                 next_token()
                 if current_token_value() == "=":
                     next_token()
+                    is_argument = False
                     logical_and_expression()
                     constant_same_line()
                 else:
@@ -394,24 +492,24 @@ def constant_same_line():
 
 def class_block():
     try:
-        global block
+        global escope, type, lexeme
         if current_token_value() == "class":
             next_token()
             if current_token_value() != "main":
                 if check_identifier():
-                    
-                    block = "Class "+ lexeme
+                    escope = "global"
                     type_equivalent[lexeme] = "IDE"
-                    
+                    type = ""
                     if search_identifier():
                         save_semantic_error(semantic_errors_table["already_declared"])
                     else:
                         insert_identifier()
-                        
                     next_token()
+                    current_lexeme = lexeme
                     class_extends()
                     if current_token_value() == "{":
                         next_token()
+                        escope = "Class " + current_lexeme
                         class_content()
                         if current_token_value() == "}":
                             next_token()
@@ -434,6 +532,8 @@ def class_extends():
     if current_token_value() == "extends":
         next_token()
         if check_identifier():
+            if not search_identifier():
+                save_semantic_error(semantic_errors_table["not_declared"])
             next_token()
         else:
             raise SyntaxError("Expected a valid class identifier")
@@ -443,6 +543,7 @@ def class_extends():
 
 
 def class_content():
+    global escope
     variable_block()
     constructor()
     methods()
@@ -462,6 +563,7 @@ def methods():
 
 
 def method():
+    global lexeme, escope
     try:
         tipo = check_type()
         if tipo or current_token_value() == "void":
@@ -476,13 +578,11 @@ def method():
                 if current_token_value() == "(":
                     next_token()
                     parameter()
+                    update_identifier_parameters()
                     if current_token_value() == ")":
                         next_token()
                         if current_token_value() == "{":
                             next_token()
-                            
-                            
-                            
                             statement_sequence()
                             if tipo:
                                 if current_token_value() == "return":
@@ -524,11 +624,17 @@ def method():
 
 
 def constructor():
+    global lexeme, escope
     if current_token_value() == "constructor":
         next_token()
         if current_token_value() == "(":
             next_token()
             parameter()
+            current_escope = escope
+            lexeme = escope.split(" ")[1]
+            escope = "global"
+            update_identifier_parameters()
+            escope = current_escope
             if current_token_value() == ")":
                 next_token()
                 if current_token_value() == "{":
@@ -571,9 +677,9 @@ def main_class_content():
 
 
 def object_block():
-    global block
+    global escope
     if current_token_value() == "objects":
-        block = "Object"
+        escope = "global"
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -587,19 +693,27 @@ def object_block():
 
 
 def object_declaration():
-    global type
+    global type, lexeme, escope, argument_list
     try:
         if check_identifier():
             type = lexeme
+            current_type = type
+            if not search_identifier():
+                save_semantic_error(f"Object with undefined type '{lexeme}'")
             next_token()
-            tipo_object = check_object_declaration()
             if check_identifier():
+                if search_identifier():
+                    save_semantic_error(semantic_errors_table["already_declared"])
+                else:
+                    insert_identifier()
                 next_token()
                 if current_token_value() == "=":
                     next_token()
                     if check_identifier():
-                        if tipo_object and tipo_object != lexeme:
-                            save_semantic_error(f"Object with wrong initialization type '{lexeme}'")
+                        if type and type != lexeme:
+                            save_semantic_error(
+                                f"Object with mismatch initialization type '{lexeme}'"
+                            )
                         next_token()
                         if current_token_value() == "->":
                             next_token()
@@ -607,7 +721,12 @@ def object_declaration():
                                 next_token()
                                 if current_token_value() == "(":
                                     next_token()
+                                    argument_list = []
                                     args_list()
+                                    lexeme = current_type
+                                    escope = "global"
+                                    symbol = search_identifier()
+                                    compare_lists(symbol["parameters_list"])
                                     if current_token_value() == ")":
                                         next_token()
                                         object_same_line()
@@ -633,16 +752,25 @@ def object_declaration():
     except SyntaxError as e:
         save_error(e)
         object_declaration()
-    
+
 
 def object_same_line():
+    global type, lexeme, escope, argument_list
     if current_token_value() == ",":
         next_token()
         if check_identifier():
+            if search_identifier():
+                save_semantic_error(semantic_errors_table["already_declared"])
+            else:
+                insert_identifier()
             next_token()
             if current_token_value() == "=":
                 next_token()
                 if check_identifier():
+                    if type and type != lexeme:
+                        save_semantic_error(
+                            f"Object with mismatch initialization type '{lexeme}'"
+                        )
                     next_token()
                     if current_token_value() == "->":
                         next_token()
@@ -650,7 +778,12 @@ def object_same_line():
                             next_token()
                             if current_token_value() == "(":
                                 next_token()
+                                argument_list = []
                                 args_list()
+                                lexeme = type
+                                escope = "global"
+                                symbol = search_identifier()
+                                compare_lists(symbol["parameters_list"])
                                 if current_token_value() == ")":
                                     next_token()
                                     object_same_line()
@@ -671,6 +804,7 @@ def object_same_line():
 
 
 def assignment_method():
+    global is_argument
     try:
         if current_token_value() == "this":
             next_token()
@@ -680,6 +814,7 @@ def assignment_method():
                     next_token()
                     if current_token_value() == "=":
                         next_token()
+                        is_argument = False
                         assignment_value()
                         if current_token_value() == ";":
                             next_token()
@@ -698,8 +833,13 @@ def assignment_method():
 
 
 def parameter():
-    if check_type():
-        if check_identifier():
+    global current_parameter
+    type = check_type_syntactic()
+    if type:
+        if check_identifier_syntactic():
+            lexeme = current_token_value()
+            current_parameter = {"lexeme": lexeme, "type": type}
+            save_parameter()
             next_token()
             parameter_value_list()
         else:
@@ -836,10 +976,12 @@ def statement():
 
 
 def assignment():
+    global is_argument
     definition_access_array()
     object_value()
     if current_token_value() == "=":
         next_token()
+        is_argument = False
         logical_and_expression()
         if current_token_value() == ";":
             next_token()
@@ -992,14 +1134,11 @@ def read_command():
 
 def program():
 
-    
     constant_block()
     variable_block()
     class_block()
     object_block()
-    
 
-    
     main_class()
     print(symbols_table)
     print()
