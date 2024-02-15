@@ -220,7 +220,8 @@ def object_value():
             raise SyntaxError("Expected a valid identifier")
     if current_token_value() == "->":
         symbol = search_identifier()
-        type = symbol["type"]
+        if symbol:
+            type = symbol["type"]
         next_token()
         method_call()
 
@@ -311,12 +312,14 @@ def assignment_value():
         if not symbol:
             save_semantic_error(semantic_errors_table["not_declared"])
             type = ""
+        else:
+            type = symbol["type"]
         next_token()
         definition_access_array()
         object_value()
-        if expected_type != type and not is_argument:
+        if expected_type != type and not is_argument and symbol:
             save_semantic_error(semantic_errors_table["incorrect_type"])
-        type = symbol["type"]
+
         current_parameter = {"lexeme": lexeme, "type": type}
         save_argument()
     elif value():

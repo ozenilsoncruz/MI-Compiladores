@@ -1,8 +1,9 @@
 const {
     string s = "teste";
+    int oo = "11";
+    real aa = s;
     
 }
-
 
 class Carro {
     variables{
@@ -16,7 +17,7 @@ class Carro {
     }
 
     methods{
-        string test(int x){
+        int test(int x){
             return a;
         }
 
@@ -27,12 +28,10 @@ class Carro {
     }
 }
 
-
 objects {
     Carro j = Carro->constructor(20, 20);
     Carro m = Carro->constructor(s);
 }
-
 
 class main {
     variables{
