@@ -28,6 +28,7 @@ escope = ""
 expected_type = ""
 current_parameter = {}
 parameter_list = []
+metodo_atual = ""
 
 argument_list = []
 
@@ -47,6 +48,16 @@ def search_identifier():
     for symbol in symbols_table:
         if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
             return symbol
+        
+def search_identifier_params():
+    global lexeme, escope, metodo_atual
+
+    for symbol in symbols_table:
+        if symbol["lexeme"] == metodo_atual and (symbol["escope"] == escope or "Class" not in symbol["escope"]) and symbol.get('parameters_list', None):
+            for sym in symbol.get('parameters_list'):
+                if sym["lexeme"] == lexeme:
+                    print(sym)
+                    return sym
 
 
 def insert_identifier():
@@ -308,7 +319,9 @@ def array():
 def assignment_value():
     global type_equivalent, current_parameter, type
     if check_identifier():
-        symbol = search_identifier()
+        symbol = search_identifier_params()
+        if not symbol:
+            symbol = search_identifier()
         if not symbol:
             save_semantic_error(semantic_errors_table["not_declared"])
             type = ""
@@ -566,7 +579,7 @@ def methods():
 
 
 def method():
-    global lexeme, escope
+    global lexeme, escope, metodo_atual
     try:
         tipo = check_type()
         if tipo or current_token_value() == "void":
@@ -577,6 +590,7 @@ def method():
                     save_semantic_error(semantic_errors_table["already_declared"])
                 else:
                     insert_identifier()
+                    metodo_atual = lexeme
                 next_token()
                 if current_token_value() == "(":
                     next_token()
@@ -594,6 +608,7 @@ def method():
                                     if current_token_value() == ";":
                                         next_token()
                                         if current_token_value() == "}":
+                                            metodo_atual = ""
                                             next_token()
                                             method()
                                         else:
@@ -627,7 +642,7 @@ def method():
 
 
 def constructor():
-    global lexeme, escope
+    global lexeme, escope, metodo_atual
     if current_token_value() == "constructor":
         next_token()
         if current_token_value() == "(":
@@ -635,6 +650,7 @@ def constructor():
             parameter()
             current_escope = escope
             lexeme = escope.split(" ")[1]
+            metodo_atual = lexeme
             escope = "global"
             update_identifier_parameters()
             escope = current_escope
@@ -644,6 +660,7 @@ def constructor():
                     next_token()
                     assignment_method()
                     if current_token_value() == "}":
+                        metodo_atual = ""
                         next_token()
                     else:
                         raise SyntaxError("Expected '}'")
@@ -809,13 +826,18 @@ def object_same_line():
 
 
 def assignment_method():
-    global is_argument
+    global is_argument, type
     try:
         if current_token_value() == "this":
             next_token()
             if current_token_value() == ".":
                 next_token()
                 if check_identifier():
+                    symbol = search_identifier()
+                    if not symbol:
+                        save_semantic_error(semantic_errors_table["not_declared"])
+                    else:
+                        type = symbol["type"]
                     next_token()
                     if current_token_value() == "=":
                         next_token()
