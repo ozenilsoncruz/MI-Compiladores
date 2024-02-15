@@ -726,7 +726,8 @@ def object_declaration():
                                     lexeme = current_type
                                     escope = "global"
                                     symbol = search_identifier()
-                                    compare_lists(symbol["parameters_list"])
+                                    if symbol:
+                                        compare_lists(symbol["parameters_list"])
                                     if current_token_value() == ")":
                                         next_token()
                                         object_same_line()
@@ -783,7 +784,8 @@ def object_same_line():
                                 lexeme = type
                                 escope = "global"
                                 symbol = search_identifier()
-                                compare_lists(symbol["parameters_list"])
+                                if symbol:
+                                    compare_lists(symbol["parameters_list"])
                                 if current_token_value() == ")":
                                     next_token()
                                     object_same_line()
