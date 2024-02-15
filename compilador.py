@@ -119,6 +119,14 @@ def check_identifier():
     return current_token_type() == "IDE"
 
 
+def check_object_declaration():
+    global lexeme
+    if lexeme not in type_equivalent and not any(symbol["lexeme"] == lexeme and "Class" in symbol["block"] for symbol in symbols_table):
+        save_semantic_error(f"Object with undefined type '{lexeme}'")
+    else: 
+        return lexeme
+
+
 def value():
     return current_token_type() in [
         "NUM",
@@ -393,7 +401,7 @@ def class_block():
                 if check_identifier():
                     
                     block = "Class "+ lexeme
-                    type_equivalent[lexeme] = lexeme
+                    type_equivalent[lexeme] = "IDE"
                     
                     if search_identifier():
                         save_semantic_error(semantic_errors_table["already_declared"])
@@ -460,6 +468,10 @@ def method():
             if current_token_value() == "void":
                 next_token()
             if check_identifier():
+                if search_identifier():
+                    save_semantic_error(semantic_errors_table["already_declared"])
+                else:
+                    insert_identifier()
                 next_token()
                 if current_token_value() == "(":
                     next_token()
@@ -468,6 +480,9 @@ def method():
                         next_token()
                         if current_token_value() == "{":
                             next_token()
+                            
+                            
+                            
                             statement_sequence()
                             if tipo:
                                 if current_token_value() == "return":
@@ -577,15 +592,14 @@ def object_declaration():
         if check_identifier():
             type = lexeme
             next_token()
+            tipo_object = check_object_declaration()
             if check_identifier():
-                if search_identifier():
-                    save_semantic_error(semantic_errors_table["already_declared"])
-                else:
-                    insert_identifier()
                 next_token()
                 if current_token_value() == "=":
                     next_token()
                     if check_identifier():
+                        if tipo_object and tipo_object != lexeme:
+                            save_semantic_error(f"Object with wrong initialization type '{lexeme}'")
                         next_token()
                         if current_token_value() == "->":
                             next_token()
@@ -619,7 +633,7 @@ def object_declaration():
     except SyntaxError as e:
         save_error(e)
         object_declaration()
-
+    
 
 def object_same_line():
     if current_token_value() == ",":

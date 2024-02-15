@@ -9,23 +9,37 @@ variables{
     int d = c;
     real d;
     int e = 20, f = 21;
+    int test;
 }
 
 class Carro {
     variables{
         int a, b;
         int i = 0;
+        int a;
     }
 
     constructor (int a, real b){
-        this.a = a;
-        this.b = b;
+        this.a = b;
+    }
+
+    methods{
+        int test(){
+            return a;
+        }
+
+        void test2(){
+           
+        }
+        
     }
 }
 
+
 objects {
     Carro j = Carro->constructor();
-    Carro j = Moto->constructor();
-    Moto j = Carro->constructor();
+    Carro k = Moto->constructor();
+    Moto l = Carro->constructor();
+    Moto2 l = Carro->constructor();
 }
 
