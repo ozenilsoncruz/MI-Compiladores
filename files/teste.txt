@@ -8,12 +8,13 @@ variables{
     string c = "";
     int d = c;
     real d;
-    int e = 20;
+    int e = 20, f = 21;
 }
 
 class Carro {
     variables{
         int a, b;
+        int i = 0;
     }
 
     constructor (int a, real b){
@@ -23,8 +24,8 @@ class Carro {
 }
 
 objects {
-    Carro j = Carro->constructor(a, b);
-    Carro j = Moto->constructor(a, b);
-    Moto j = Carro->constructor(a, b);
+    Carro j = Carro->constructor();
+    Carro j = Moto->constructor();
+    Moto j = Carro->constructor();
 }
 

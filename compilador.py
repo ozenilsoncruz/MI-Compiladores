@@ -15,23 +15,7 @@ semantic_errors_table = {
     "already_declared": "with identifier already declared",
     "not_declared": "with identifier not declared",
     "identifier_not_declared": "Identifier not declared",
-    "incorrect_type": "with incorrect type",
-    # "method_already_declared": "Method with identifier already declared",
-    # "class_already_declared": "Class with identifier already declared",
-    # "object_already_declared": "Object with identifier already declared",
-    # "variable_incorrect_type": "Variable with incorrect type",
-    # "variable_not_declared": "Variable with identifier not declared",
-    # "method_not_declared": "Method with identifier not declared",
-    # "class_not_declared": "Class with identifier not declared",
-    
-    # "method_not_return": "Method with identifier not return",
-    # "method_return": "Method void with identifier return",
-    # "method_return_type": "Method with incorrect return type",
-    # "method_parameter_not_declared": "Method with parameter not declared",
-    # "method_parameter_declared": "Method with parameter already declared",
-    # "method_parameter_type": "Method with parameter incorrect type",
-    # "method_parameter_missing": "Method with parameter missing",
-    # "method_parameter_excess": "Method with parameter excess"
+    "incorrect_type": "with incorrect type"
 }
 
 
@@ -57,9 +41,8 @@ def search_identifier():
     global lexeme, escope, block
     
     for symbol in symbols_table:
-        if symbol["lexeme"] == lexeme and (symbol["escope"] == escope or symbol["block"] == block):
+        if symbol["lexeme"] == lexeme and symbol["escope"] == escope and (symbol["block"] == block or symbol["escope"] == 'global'):
             return symbol
-    
 
 
 def insert_identifier():
@@ -289,7 +272,7 @@ def optional_value():
 def variable_block():
     global block
     if current_token_value() == "variables":
-        if block == "":
+        if "Class" not in block:
             block = "Variable"
         next_token()
         if current_token_value() == "{":
