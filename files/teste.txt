@@ -13,7 +13,7 @@ class Carro {
     }
 
     constructor (int a, string b){
-        a = b;
+        this.a = b;
     }
 
     methods{
