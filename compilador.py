@@ -40,6 +40,7 @@ type_equivalent = {
 }
 
 is_argument = False
+block = ""
 
 
 def search_identifier():
@@ -48,13 +49,18 @@ def search_identifier():
     for symbol in symbols_table:
         if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
             return symbol
-        
+
+
 def search_identifier_params():
     global lexeme, escope, metodo_atual
 
     for symbol in symbols_table:
-        if symbol["lexeme"] == metodo_atual and (symbol["escope"] == escope or "Class" not in symbol["escope"]) and symbol.get('parameters_list', None):
-            for sym in symbol.get('parameters_list'):
+        if (
+            symbol["lexeme"] == metodo_atual
+            and (symbol["escope"] == escope or "Class" not in symbol["escope"])
+            and symbol.get("parameters_list", None)
+        ):
+            for sym in symbol.get("parameters_list"):
                 if sym["lexeme"] == lexeme:
                     print(sym)
                     return sym
@@ -196,7 +202,6 @@ def method_call():
     global type, lexeme, escope, argument_list, is_argument
 
     if check_identifier():
-        symbol = search_identifier()
         escope = "Class " + type
         symbol = search_identifier()
         if not symbol:
@@ -221,11 +226,17 @@ def method_call():
 
 
 def object_value():
-    global type
+    global type, escope
     if current_token_value() == ".":
         next_token()
         if check_identifier():
-            # TODO: Check if the attribute exists
+            escope = "Class " + type
+            symbol = search_identifier()
+            if symbol:
+                type = symbol["type"]
+            else:
+                save_semantic_error(f"Attribute '{lexeme}' not declared")
+
             next_token()
         else:
             raise SyntaxError("Expected a valid identifier")
@@ -322,6 +333,7 @@ def assignment_value():
         symbol = search_identifier_params()
         if not symbol:
             symbol = search_identifier()
+            # type = symbol["type"]
         if not symbol:
             save_semantic_error(semantic_errors_table["not_declared"])
             type = ""
@@ -382,8 +394,6 @@ def optional_value():
 def variable_block():
     global escope
     if current_token_value() == "variables":
-        if "Class" not in escope:
-            escope = "global"
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -397,6 +407,9 @@ def variable_block():
 
 
 def variable():
+    global escope
+    if block == "main":
+        escope = "global"
     try:
         if check_type():
             if check_identifier():
@@ -673,6 +686,8 @@ def constructor():
 
 
 def main_class():
+    global block
+    block = "main"
     if current_token_value() == "class":
         next_token()
         if current_token_value() == "main":
@@ -1017,6 +1032,7 @@ def assignment():
 
 
 def statement_sequence():
+    global escope
     try:
         if current_token_value() in ["print", "read"]:
             command()
@@ -1025,6 +1041,12 @@ def statement_sequence():
             statement()
             statement_sequence()
         elif check_identifier():
+            current_escope = escope
+            escope = "global"
+            symbol = search_identifier()
+            if not symbol:
+                save_semantic_error(semantic_errors_table["not_declared"])
+            escope = current_escope
             next_token()
             assignment()
             statement_sequence()
@@ -1160,7 +1182,6 @@ def read_command():
 
 
 def program():
-
     constant_block()
     variable_block()
     class_block()
