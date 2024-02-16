@@ -347,7 +347,6 @@ def assignment_value():
             type = ""
         else:
             type = symbol["type"]
-        print(type, expected_type, lexeme, current_token_line())
         next_token()
         definition_access_array()
         object_value()
