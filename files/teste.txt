@@ -2,14 +2,13 @@ const {
     string s = "teste";
     int oo = "11";
     real aa = 10;
-    string ola = "";
-    
+    string ola = "";    
 }
 
 class Carro {
     variables{
         int a, b;
-        int i = 0;
+        string i = "";
     }
 
     constructor (int a, string b){
@@ -18,6 +17,7 @@ class Carro {
 
     methods{
         int test(int x){
+            a = x;
             return x;
         }
 
@@ -30,12 +30,13 @@ class Carro {
 
 objects {
     Carro j = Carro->constructor(20, 20);
-    Carro m = Carro->constructor(10, 0);
+    Carro m = Carro->constructor(ola, 0);
 }
 
 class main {
     variables{
         int z = m -> test(10);
+        int y = m.i;
     }
     
 }
