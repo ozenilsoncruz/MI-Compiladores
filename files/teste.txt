@@ -2,7 +2,8 @@ const {
     string s = "teste";
     int oo = "11";
     real aa = 10;
-    string ola = "";    
+    string ola = ""; 
+    string a = "10";   
 }
 
 class Carro {
@@ -12,12 +13,13 @@ class Carro {
     }
 
     constructor (int a, string b){
-        this.a = b;
+        this.a = "40";
     }
 
     methods{
         int test(int x){
-            a = x;
+            this.a = 1;
+            a = 10;
             return x;
         }
 
