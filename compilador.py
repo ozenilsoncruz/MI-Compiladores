@@ -72,7 +72,7 @@ def search_identifier_params():
                     return sym
 
 
-def insert_identifier():
+def insert_identifier(is_const = False):
     global lexeme, type, escope
 
     symbols_table.append(
@@ -80,6 +80,7 @@ def insert_identifier():
             "lexeme": lexeme,
             "type": type,
             "escope": escope,
+            "is_const": is_const
         }
     )
 
@@ -493,7 +494,7 @@ def constant():
                 if search_identifier():
                     save_semantic_error(semantic_errors_table["already_declared"])
                 else:
-                    insert_identifier()
+                    insert_identifier(True) #"is_const"
                 next_token()
                 if current_token_value() == "=":
                     next_token()
@@ -523,7 +524,7 @@ def constant_same_line():
                 if search_identifier():
                     save_semantic_error(semantic_errors_table["already_declared"])
                 else:
-                    insert_identifier()
+                    insert_identifier(True)
                 next_token()
                 if current_token_value() == "=":
                     next_token()
@@ -1049,6 +1050,9 @@ def assignment():
     global is_argument
     definition_access_array()
     object_value()
+    symbol = search_identifier()
+    if symbol and symbol.get("is_const", False):
+        save_semantic_error(f"Cannot modify value of constant '{symbol['lexeme']}'")
     if current_token_value() == "=":
         next_token()
         is_argument = False

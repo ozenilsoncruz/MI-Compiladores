@@ -6,6 +6,10 @@ const {
     string a = "10";   
 }
 
+variables{
+    string i = "";
+}
+
 class Carro {
     variables{
         int a, b;
