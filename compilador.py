@@ -877,7 +877,11 @@ def assignment_method(method: bool = False):
                     if method:
                         optional_value()
                     else:
-                        assignment_value()
+                        if current_token_value() == "=":
+                            next_token()
+                            assignment_value()
+                        else:
+                            raise SyntaxError("Expected '='")
                     if current_token_value() == ";":
                         next_token()
                         assignment_method()
