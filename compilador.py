@@ -29,6 +29,7 @@ expected_type = ""
 current_parameter = {}
 parameter_list = []
 metodo_atual = ""
+const_var = True
 
 argument_list = []
 
@@ -42,12 +43,30 @@ type_equivalent = {
 is_argument = False
 
 
-def search_identifier():
-    global lexeme, escope
+def search_identifier(printar = False):
+    global lexeme, escope, const_var
 
-    for symbol in symbols_table:
-        if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
-            return symbol
+    
+    
+    if "this." in lexeme:
+        lexeme = lexeme.split("this.")[1]
+        for symbol in symbols_table:
+            if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
+                return symbol
+    else:
+        for symbol in symbols_table:
+            if symbol.get('parameters_list', '') == '' and const_var: # se nao for uma funcao, procura no escopo atual
+                if(printar):
+                    print()
+                    print(lexeme)
+                    print(symbol)
+                    print()
+                if symbol["lexeme"] == lexeme and symbol["escope"] == 'global':
+                    return symbol
+            else:
+                if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
+                    return symbol
+
         
 def search_identifier_params():
     global lexeme, escope, metodo_atual
@@ -56,7 +75,6 @@ def search_identifier_params():
         if symbol["lexeme"] == metodo_atual and (symbol["escope"] == escope or "Class" not in symbol["escope"]) and symbol.get('parameters_list', None):
             for sym in symbol.get('parameters_list'):
                 if sym["lexeme"] == lexeme:
-                    print(sym)
                     return sym
 
 
@@ -380,10 +398,13 @@ def optional_value():
 
 
 def variable_block():
-    global escope
+    global escope, const_var
     if current_token_value() == "variables":
         if "Class" not in escope:
             escope = "global"
+            const_var = True
+        else:
+            const_var = False
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -619,6 +640,7 @@ def method():
                                     raise SyntaxError("Expected 'return'")
                             else:
                                 if current_token_value() == "}":
+                                    metodo_atual = ""
                                     next_token()
                                     method()
                                 else:
@@ -825,35 +847,37 @@ def object_same_line():
             raise SyntaxError("Expected a valid identifier")
 
 
-def assignment_method():
-    global is_argument, type
+def assignment_method(method: bool = False):
+    global is_argument, type, lexeme
     try:
         if current_token_value() == "this":
             next_token()
             if current_token_value() == ".":
                 next_token()
                 if check_identifier():
+                    lexeme = "this." + lexeme
                     symbol = search_identifier()
                     if not symbol:
                         save_semantic_error(semantic_errors_table["not_declared"])
                     else:
                         type = symbol["type"]
                     next_token()
-                    if current_token_value() == "=":
-                        next_token()
-                        is_argument = False
-                        assignment_value()
-                        if current_token_value() == ";":
-                            next_token()
-                            assignment_method()
-                        else:
-                            raise SyntaxError("Expected ';'")
+                    is_argument = False
+                    if method:
+                        optional_value()
                     else:
-                        raise SyntaxError("Expected '='")
+                        assignment_value()
+                    if current_token_value() == ";":
+                        next_token()
+                        assignment_method()
+                    else:
+                        raise SyntaxError("Expected ';'")
                 else:
                     raise SyntaxError("Expected a valid identifier")
             else:
                 raise SyntaxError("Expected '.'")
+        else:
+            return True
     except SyntaxError as e:
         save_error(e)
         assignment_method()
@@ -1017,6 +1041,7 @@ def assignment():
 
 
 def statement_sequence():
+    global type, const_var
     try:
         if current_token_value() in ["print", "read"]:
             command()
@@ -1025,7 +1050,15 @@ def statement_sequence():
             statement()
             statement_sequence()
         elif check_identifier():
-            next_token()
+            if assignment_method(True):
+                const_var = True
+                symbol = search_identifier()
+                if not symbol:
+                    save_semantic_error(semantic_errors_table["not_declared"])
+                else:
+                    type = symbol["type"]
+                const_var = False
+                next_token()
             assignment()
             statement_sequence()
     except SyntaxError as e:
