@@ -29,7 +29,7 @@ expected_type = ""
 current_parameter = {}
 parameter_list = []
 metodo_atual = ""
-const_var = True
+this = False
 
 argument_list = []
 
@@ -45,23 +45,15 @@ block = ""
 
 
 def search_identifier():
-    global lexeme, escope, const_var
-
+    global lexeme, escope, this
     
-    
-    if "this." in lexeme:
-        lexeme = lexeme.split("this.")[1]
-        for symbol in symbols_table:
+    for symbol in symbols_table:
+        if symbol.get('parameters_list', '') == '' and not this: # se nao for uma funcao, procura no escopo atual
+            if symbol["lexeme"] == lexeme and symbol["escope"] == 'global':
+                return symbol
+        else:
             if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
                 return symbol
-    else:
-        for symbol in symbols_table:
-            if symbol.get('parameters_list', '') == '' and const_var: # se nao for uma funcao, procura no escopo atual
-                if symbol["lexeme"] == lexeme and symbol["escope"] == 'global':
-                    return symbol
-            else:
-                if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
-                    return symbol
 
         
 def search_identifier_params():
@@ -238,12 +230,14 @@ def method_call():
 
 
 def object_value():
-    global type, escope
+    global type, escope, this
     if current_token_value() == ".":
         next_token()
         if check_identifier():
             escope = "Class " + type
+            this = True
             symbol = search_identifier()
+            this = False
             if symbol:
                 type = symbol["type"]
             else:
@@ -404,13 +398,13 @@ def optional_value():
 
 
 def variable_block():
-    global escope, const_var
+    global escope, this
     if current_token_value() == "variables":
         if "Class" not in escope:
             escope = "global"
-            const_var = True
+            this = False
         else:
-            const_var = False
+            this = True
         next_token()
         if current_token_value() == "{":
             next_token()
@@ -859,20 +853,21 @@ def object_same_line():
 
 
 def assignment_method(method: bool = False):
-    global is_argument, type, lexeme
+    global is_argument, type, lexeme, this
     try:
         if current_token_value() == "this":
             next_token()
             if current_token_value() == ".":
                 next_token()
                 if check_identifier():
-                    lexeme = "this." + lexeme
+                    this = True
                     symbol = search_identifier()
                     if not symbol:
                         save_semantic_error(semantic_errors_table["not_declared"])
                     else:
                         type = symbol["type"]
                     next_token()
+                    this = False
                     is_argument = False
                     if method:
                         optional_value()
@@ -1056,7 +1051,7 @@ def assignment():
 
 
 def statement_sequence():
-    global type, const_var
+    global type
     try:
         if current_token_value() in ["print", "read"]:
             command()
@@ -1066,13 +1061,11 @@ def statement_sequence():
             statement_sequence()
         elif check_identifier():
             if assignment_method(True):
-                const_var = True
                 symbol = search_identifier()
                 if not symbol:
                     save_semantic_error(semantic_errors_table["not_declared"])
                 else:
                     type = symbol["type"]
-                const_var = False
                 next_token()
             assignment()
             statement_sequence()
