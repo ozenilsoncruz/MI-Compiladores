@@ -1,4 +1,4 @@
-# Analisador Lexico
+# Analisador Semântico
 
 <!-- <details>
 <summary>Texto do Problema</summary>
@@ -7,23 +7,22 @@
 
 ## Tema
 
-Analisador Lexico.
+Analisador Semântico.
 
 ## Objetivos de Aprendizagem
 
 Ao final da realização deste problema, o/a discente deverá ser capaz de:
 
-- Compreender como funciona um analisador lexico;
+- Compreender como funciona um analisador semântica;
 - Assimilar conceitos básicos sobre compiladores.
 
 ## Problema
 
-Criar um analisador lexico seguindo os seguintes requisitos:
+Criar um analisador semântico seguindo os seguintes requisitos:
 
-- A formação dos lexemas inicia e termina na mesma linha.
-- A entrada para este analisador é um conjunto de arquivos texto. Estes arquivos de entrada deverão estar em uma pasta na raiz do projeto chamada files.
-- A saída do analisador léxico deverá ser através de um conjunto de arquivos de saída (um para cada arquivo de entrada), denominados X-saida.txt, onde X é o nome do arquivo de entrada. Estes arquivos de saída deverão estar em uma pasta na raiz do projeto chamada files.
-- Os arquivos de saída deverão apresentar a lista de tokens, proveniente da análise léxica, além dos erros léxicos, caso existam. Se não houver erros, uma mensagem de sucesso deve ser gravada no arquivo de saída.
+- Verificação de tipos. A linguagem é fortemente tipada, ou seja, não há conversão de tipos de forma explícita ou implícita.
+- Declaração de variáveis e constantes. Existem dois escopos: global e local a um método. É permitido o uso de identificadores de mesmo nome, porém em escopos diferentes.
+- Existência e duplicidade de variáveis e constantes.
 
 ---
 <!-- </details> --->
