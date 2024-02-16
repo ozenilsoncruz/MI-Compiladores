@@ -18,8 +18,10 @@ class Carro {
 
     methods{
         int test(int x){
-            this.a = 1;
-            a = 10;
+            a = x;
+            a = "10";
+            this.b = "12";
+            this.a = x;
             return x;
         }
 

@@ -46,16 +46,18 @@ block = ""
 
 def search_identifier():
     global lexeme, escope, this
-    
+
     for symbol in symbols_table:
-        if symbol.get('parameters_list', '') == '' and not this: # se nao for uma funcao, procura no escopo atual
-            if symbol["lexeme"] == lexeme and symbol["escope"] == 'global':
+        if (
+            symbol.get("parameters_list", "") == "" and not this
+        ):  # se nao for uma funcao, procura no escopo atual
+            if symbol["lexeme"] == lexeme and symbol["escope"] == "global":
                 return symbol
         else:
             if symbol["lexeme"] == lexeme and symbol["escope"] == escope:
                 return symbol
 
-        
+
 def search_identifier_params():
     global lexeme, escope, metodo_atual
 
@@ -345,6 +347,7 @@ def assignment_value():
             type = ""
         else:
             type = symbol["type"]
+        print(type, expected_type, lexeme, current_token_line())
         next_token()
         definition_access_array()
         object_value()
@@ -354,6 +357,12 @@ def assignment_value():
         current_parameter = {"lexeme": lexeme, "type": type}
         save_argument()
     elif value():
+        # print(
+        #     type_equivalent.get(type),
+        #     current_token_type(),
+        #     lexeme,
+        #     current_token_line(),
+        # )
         if (
             type_equivalent.get(type) is not None
             and current_token_type() != type_equivalent[type]
@@ -853,7 +862,7 @@ def object_same_line():
 
 
 def assignment_method(method: bool = False):
-    global is_argument, type, lexeme, this
+    global is_argument, type, lexeme, this, expected_type
     try:
         if current_token_value() == "this":
             next_token()
@@ -866,6 +875,7 @@ def assignment_method(method: bool = False):
                         save_semantic_error(semantic_errors_table["not_declared"])
                     else:
                         type = symbol["type"]
+                        expected_type = type
                     next_token()
                     this = False
                     is_argument = False
@@ -1051,7 +1061,7 @@ def assignment():
 
 
 def statement_sequence():
-    global type
+    global type, expected_type
     try:
         if current_token_value() in ["print", "read"]:
             command()
@@ -1066,6 +1076,7 @@ def statement_sequence():
                     save_semantic_error(semantic_errors_table["not_declared"])
                 else:
                     type = symbol["type"]
+                    expected_type = type
                 next_token()
             assignment()
             statement_sequence()
