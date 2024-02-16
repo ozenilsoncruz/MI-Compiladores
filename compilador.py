@@ -2,7 +2,7 @@ from config import palavras_reservadas
 
 tokens = []
 index = 0
-errors = []
+sintatic_errors = []
 semantic_errors = []
 
 key_words = list(palavras_reservadas)
@@ -170,7 +170,7 @@ def save_error(e: SyntaxError, recovery_point=None):
     message = (
         f"{e.msg}, received '{current_token_value()}' in line {current_token_line()}"
     )
-    errors.append(message)
+    sintatic_errors.append(message)
     synchronize(recovery_point)
 
 
@@ -357,12 +357,6 @@ def assignment_value():
         current_parameter = {"lexeme": lexeme, "type": type}
         save_argument()
     elif value():
-        # print(
-        #     type_equivalent.get(type),
-        #     current_token_type(),
-        #     lexeme,
-        #     current_token_line(),
-        # )
         if (
             type_equivalent.get(type) is not None
             and current_token_type() != type_equivalent[type]
@@ -1221,17 +1215,17 @@ def program():
     object_block()
 
     main_class()
-    print(symbols_table)
-    print()
-    print(semantic_errors)
-
+    
 
 def CompilerParse(tokens_list: list):
-    global tokens, errors
+    global tokens, sintatic_errors, semantic_errors
     tokens = tokens_list
     try:
         program()
     except SyntaxError as e:
         save_error(e)
-    error_messages = "\n".join(errors) if errors else "Sucesso!"
-    return error_messages
+        
+    error_messages_sintatic = "\n".join(sintatic_errors) if sintatic_errors else "Sucesso!"
+    error_messages_semantic = "\n".join(semantic_errors) if semantic_errors else "Sucesso!"
+    
+    return (error_messages_sintatic, error_messages_semantic)

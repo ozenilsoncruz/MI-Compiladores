@@ -1,1 +1,14 @@
+--------------------Erros Sintaticos--------------------
 Sucesso!
+
+
+--------------------Erros Semanticos--------------------
+Line 3 - Incorrect type
+Line 20 - Incorrect type
+Line 25 - Cannot modify value of constant 'a'
+Line 25 - Incorrect type
+Line 26 - Cannot modify value of constant 'a'
+Line 27 - Incorrect type
+Line 40 - Incorrect type of arguments, expected string in parameter number 2, received int
+Line 41 - Incorrect type of arguments, expected int in parameter number 1, received string
+Line 47 - Incorrect type

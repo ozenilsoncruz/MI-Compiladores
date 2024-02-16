@@ -10,9 +10,12 @@ class MainExecutor:
 
     def process_file(self, file_name):
         tokens = lexico(pasta=self.folder, arquivo=file_name)
-        error_messages = CompilerParse(tokens)
+        error_messages_sintatic, error_messages_semantic = CompilerParse(tokens)
         output_file = file_name.split(".")[0] + "-saida.txt"
-        salvar_arquivo(self.folder, output_file, error_messages)
+        
+        mensagem = "--------------------Erros Sintaticos--------------------\n" + error_messages_sintatic + \
+             "\n\n\n--------------------Erros Semanticos--------------------\n" + error_messages_semantic
+        salvar_arquivo(self.folder, output_file, mensagem)
 
     def run(self):
         files = os.listdir(self.folder)
