@@ -1,5 +1,7 @@
 import os
-from sintatico import SyntacticParse
+import importlib
+import sintatico 
+
 from lexico import lexico
 from config import salvar_arquivo
 
@@ -9,9 +11,10 @@ class MainExecutor:
 
     def process_file(self, file_name):
         tokens = lexico(pasta=self.folder, arquivo=file_name)
-        error_messages = SyntacticParse(tokens)
+        error_messages = sintatico.SyntacticParse(tokens)
         output_file = file_name.split(".")[0] + "-saida.txt"
         salvar_arquivo(self.folder, output_file, error_messages)
+        importlib.reload(sintatico)  # Recarregue o módulo sintatico após o uso
 
     def run(self):
         files = os.listdir(self.folder)
