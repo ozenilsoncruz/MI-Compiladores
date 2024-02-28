@@ -1,0 +1,7 @@
+--------------------Erros Sintaticos--------------------
+Sucesso!
+
+
+--------------------Erros Semanticos--------------------
+Line 3 - Incorrect type
+Line 10 - Incorrect type

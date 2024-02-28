@@ -1,0 +1,11 @@
+const {
+    string s = "teste";
+    int oo = "11";
+    real aa = 10;
+    string ola = ""; 
+    string a = "10";   
+}
+
+variables{
+    string i = 10;
+}

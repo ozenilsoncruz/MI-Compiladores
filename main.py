@@ -1,5 +1,6 @@
+import importlib
 import os
-from compilador import CompilerParse
+import compilador 
 from lexico import lexico
 from config import salvar_arquivo
 
@@ -10,12 +11,14 @@ class MainExecutor:
 
     def process_file(self, file_name):
         tokens = lexico(pasta=self.folder, arquivo=file_name)
-        error_messages_sintatic, error_messages_semantic = CompilerParse(tokens)
+        error_messages_sintatic, error_messages_semantic = compilador.CompilerParse(tokens)
         output_file = file_name.split(".")[0] + "-saida.txt"
         
         mensagem = "--------------------Erros Sintaticos--------------------\n" + error_messages_sintatic + \
              "\n\n\n--------------------Erros Semanticos--------------------\n" + error_messages_semantic
         salvar_arquivo(self.folder, output_file, mensagem)
+
+        importlib.reload(compilador)  # Recarregue o módulo sintatico após o uso
 
     def run(self):
         files = os.listdir(self.folder)
