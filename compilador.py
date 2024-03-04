@@ -220,7 +220,7 @@ def method_call():
             args_list()
             if symbol:
                 type = symbol["type"]
-                compare_lists(symbol["parameters_list"])
+                compare_lists(symbol.get("parameters_list", ''))
             if current_token_value() == ")":
                 is_argument = False
                 next_token()
@@ -777,7 +777,7 @@ def object_declaration():
                                     escope = "global"
                                     symbol = search_identifier()
                                     if symbol:
-                                        compare_lists(symbol["parameters_list"])
+                                        compare_lists(symbol.get("parameters_list", ''))
                                     if current_token_value() == ")":
                                         next_token()
                                         object_same_line()
@@ -835,7 +835,7 @@ def object_same_line():
                                 escope = "global"
                                 symbol = search_identifier()
                                 if symbol:
-                                    compare_lists(symbol["parameters_list"])
+                                    compare_lists(symbol.get("parameters_list", ''))
                                 if current_token_value() == ")":
                                     next_token()
                                     object_same_line()
